@@ -11,8 +11,12 @@ contract Soveren is ERC1155 {
     using Address for address;
 
     struct Product {
-        address payable creator; // product creator
-        string uri;              // per-product uri
+        address payable creator;  // product creator
+        string uri;               // metadata uri
+        uint256 price;            // base price ETH
+        uint8[] bulkDiscounts;    // discounts array for amount of 10,100,1000 etc
+        uint8 affiliateInterest;  // how many percents will receive promoter (0-99)
+        uint8 donation;           // per product donation (percents, 0-99)
     }
 
     mapping(uint256 => Product) private _products;

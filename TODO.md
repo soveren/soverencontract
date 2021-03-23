@@ -1,13 +1,13 @@
 ## TODO
-- inherit 1155
-- uri
-- set uri
-- mint
-- dispose
 - buy
-- transfer
+- withdraw  
+
+- transfer (test)
     
 ## Later
-- mint bath
+- donation
+- promoter
+- bulk sales
+- reserve
 
-where 
+- upgrades
