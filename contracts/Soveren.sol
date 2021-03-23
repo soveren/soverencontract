@@ -18,12 +18,12 @@ contract Soveren is ERC1155 {
     mapping(uint256 => Product) private _products;
 
     constructor() ERC1155("") {
-
     }
 
     function uri(uint256 id) external view virtual override returns (string memory) {
         return _products[id].uri;
     }
+
 
     function mint(uint256 id, uint256 amount, string memory uri_) public virtual {
         _mint(msg.sender, id, amount, msg.data, uri_);
@@ -37,6 +37,15 @@ contract Soveren is ERC1155 {
             require( _products[id].creator == account, "SOVEREN: Mint more can token creator only");
         }
         super._mint( account, id, amount, data);
+    }
+
+    function burn(uint256 id, uint256 amount) public virtual {
+        _burn(msg.sender, id, amount);
+    }
+
+    function _burn(address account, uint256 id, uint256 amount) internal override virtual {
+        require( _products[id].creator == account, "SOVEREN: Burn can token creator only");
+        super._burn(account, id, amount);
     }
 
 

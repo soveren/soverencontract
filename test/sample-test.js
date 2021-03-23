@@ -26,9 +26,23 @@ describe("Soveren", function() {
     expect(await soveren.balanceOf(a1, 1)).to.equal(1000);
   });
 
+  it("Product should have specified uri", async function() {
+    expect(await soveren.uri(1)).to.equal(uri1);
+  });
+
   it("Should mint more", async function() {
     await soveren.connect(sig1).mint(1, 100, uri1)
     expect(await soveren.balanceOf(a1, 1)).to.equal(1100);
+  });
+
+  it("Should not mint more from another address", async function() {
+    await expect(soveren.connect(sig2).mint(1, 100, uri1)).to.be.revertedWith('SOVEREN: Mint more can token creator only')
+    expect(await soveren.balanceOf(a1, 1)).to.equal(1100);
+  });
+
+  it("Should burn", async function() {
+    await soveren.connect(sig1).burn(1, 100)
+    expect(await soveren.balanceOf(a1, 1)).to.equal(1000);
   });
 
 
