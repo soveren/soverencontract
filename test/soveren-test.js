@@ -1,6 +1,10 @@
 const { ethers } = require("hardhat");
 const { expect } = require("chai");
 
+// const chai = require("chai");
+// const { solidity } = require("ethereum-waffle");
+// chai.use(solidity);
+
 
 let soveren, ownerSig, sig1, sig2, a1, a2;
 
@@ -72,6 +76,11 @@ describe("Mint & Burn", function() {
 
 });
 
-describe("Buy", function() {
-
+describe("Offers & Buy", function() {
+  it("Should create offer", async function() {
+    await soveren.connect(sig1).makeOffer(1, 1000, [], 20, 5 )
+    expect(await soveren.getOffer(a1, 1)).to.deep.equal(
+        [ethers.BigNumber.from(1000), [], 20, 5 ]
+    );
+  });
 });
