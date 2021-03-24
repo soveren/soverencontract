@@ -1,13 +1,14 @@
-## TODO
+### TODO
 - buy
 - withdraw  
 
 - transfer (test)
     
-## Later
+### Later
 - donation
 - promoter
 - bulk sales
 - reserve
 
-- upgrades
+- ReentrancyGuard https://docs.openzeppelin.com/contracts/3.x/api/utils#ReentrancyGuard
+- Upgrades

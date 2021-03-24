@@ -13,12 +13,15 @@ contract Soveren is ERC1155 {
     struct Product {
         address payable creator;  // product creator
         string uri;               // metadata uri
+        string privateUri;        // simple DRM for digital products
         bool canMintMore;         // is it possible to mint more tokens of this type?
+    }
+
+    struct Offer {
         uint256 price;            // base price ETH
         uint8[] bulkDiscounts;    // discounts array for amount of 10,100,1000 etc
         uint8 affiliateInterest;  // how many percents will receive promoter (0-99)
         uint8 donation;           // per product donation (percents, 0-99)
-        string privateUri;        // simple DRM for digital products
     }
 
     mapping(uint256 => Product) private _products;
@@ -30,35 +33,35 @@ contract Soveren is ERC1155 {
         return _products[id].uri;
     }
 
+    function privateUri(uint256 id) external view virtual returns (string memory) {
+        require(balanceOf(msg.sender, id)>0, "SOVEREN: You do not have such token");
+        return _products[id].privateUri;
+    }
 
-    function mint(uint256 id, uint256 amount, string memory uri_, bool canMintMore) public virtual {
+    function mint(uint256 id, uint256 amount, string memory uri_, string memory privateUri_, bool canMintMore) public virtual {
         require( _products[id].creator == address(0), "SOVEREN: Token already exists");
 
         address payable creator = msg.sender;
-//        _products[id] = Product({
-//            creator:creator,
-//            uri:uri_,
-//            canMintMore:canMintMore,
-//        });
+        _products[id] = Product({
+            creator:creator,
+            uri:uri_,
+            privateUri:privateUri_,
+            canMintMore:canMintMore
+        });
 
-        Product storage p = _products[id];
-        p.creator = creator;
-        p.uri = uri_;
-        p.canMintMore = canMintMore;
-
-        super._mint(creator, id, amount, msg.data);
+        _mint(creator, id, amount, msg.data);
     }
 
     function mintMore(uint256 id, uint256 amount) public virtual {
         require( _products[id].creator == msg.sender, "SOVEREN: Mint more can token creator only");
         require( _products[id].canMintMore, "SOVEREN: mintMore disabled");
 
-        super._mint(msg.sender, id, amount, msg.data);
+        _mint(msg.sender, id, amount, msg.data);
     }
 
 
     function burn(uint256 id, uint256 amount) public virtual {
-        super._burn(msg.sender, id, amount);
+        _burn(msg.sender, id, amount);
     }
 
 
