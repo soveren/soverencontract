@@ -22,7 +22,7 @@ describe("Mint & Burn", function() {
   });
 
   it("Should mint new product", async function() {
-    await soveren.connect(sig1).mint(1, 1000, uri1)
+    await soveren.connect(sig1).mint(1, 1000, uri1, true)
     expect(await soveren.balanceOf(a1, 1)).to.equal(1000);
   });
 
@@ -36,7 +36,7 @@ describe("Mint & Burn", function() {
   });
 
   it("Should not mint from another address", async function() {
-    await expect(soveren.connect(sig2).mint(1, 100, uri1)).to.be.revertedWith('SOVEREN: Token already exists')
+    await expect(soveren.connect(sig2).mint(1, 100, uri1, true)).to.be.revertedWith('SOVEREN: Token already exists')
   });
 
   it("Should not mint more from another address", async function() {
@@ -52,9 +52,17 @@ describe("Mint & Burn", function() {
     await expect( soveren.connect(sig1).burn(1, 99999)).to.be.revertedWith('ERC1155: burn amount exceeds balance')
   });
 
-
   it("Should not burn exceed sig2", async function() {
     await expect( soveren.connect(sig2).burn(1, 100)).to.be.revertedWith('ERC1155: burn amount exceeds balance')
+  });
+
+  it("Should mint new product sig2", async function() {
+    await soveren.connect(sig2).mint(2, 1000, uri1, false)
+    expect(await soveren.balanceOf(a1, 1)).to.equal(1000);
+  });
+
+  it("Should not mint more", async function() {
+    await expect(  soveren.connect(sig2).mintMore(2, 100)).to.be.revertedWith('SOVEREN: mintMore disabled')
   });
 
 });
