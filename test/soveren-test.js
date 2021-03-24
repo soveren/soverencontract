@@ -15,7 +15,7 @@ before(async function () {
   a2 = sig1.getAddress()
 })
 
-describe("Soveren", function() {
+describe("Mint & Burn", function() {
 
   it("Should be 0 before mint", async function() {
     expect(await soveren.balanceOf(a1, 1)).to.equal(0);
@@ -31,13 +31,16 @@ describe("Soveren", function() {
   });
 
   it("Should mint more", async function() {
-    await soveren.connect(sig1).mint(1, 100, uri1)
+    await soveren.connect(sig1).mintMore(1, 100)
     expect(await soveren.balanceOf(a1, 1)).to.equal(1100);
   });
 
+  it("Should not mint from another address", async function() {
+    await expect(soveren.connect(sig2).mint(1, 100, uri1)).to.be.revertedWith('SOVEREN: Token already exists')
+  });
+
   it("Should not mint more from another address", async function() {
-    await expect(soveren.connect(sig2).mint(1, 100, uri1)).to.be.revertedWith('SOVEREN: Mint more can token creator only')
-    expect(await soveren.balanceOf(a1, 1)).to.equal(1100);
+    await expect(soveren.connect(sig2).mintMore(1, 100)).to.be.revertedWith('SOVEREN: Mint more can token creator only')
   });
 
   it("Should burn", async function() {
@@ -45,5 +48,17 @@ describe("Soveren", function() {
     expect(await soveren.balanceOf(a1, 1)).to.equal(1000);
   });
 
+  it("Should not burn exceed", async function() {
+    await expect( soveren.connect(sig1).burn(1, 99999)).to.be.revertedWith('ERC1155: burn amount exceeds balance')
+  });
+
+
+  it("Should not burn exceed sig2", async function() {
+    await expect( soveren.connect(sig2).burn(1, 100)).to.be.revertedWith('ERC1155: burn amount exceeds balance')
+  });
+
+});
+
+describe("Buy", function() {
 
 });

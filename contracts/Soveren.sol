@@ -17,6 +17,7 @@ contract Soveren is ERC1155 {
         uint8[] bulkDiscounts;    // discounts array for amount of 10,100,1000 etc
         uint8 affiliateInterest;  // how many percents will receive promoter (0-99)
         uint8 donation;           // per product donation (percents, 0-99)
+        string privateUri;        // simple DRM for digital products
     }
 
     mapping(uint256 => Product) private _products;
@@ -30,27 +31,25 @@ contract Soveren is ERC1155 {
 
 
     function mint(uint256 id, uint256 amount, string memory uri_) public virtual {
-        _mint(msg.sender, id, amount, msg.data, uri_);
+        require( _products[id].creator == address(0), "SOVEREN: Token already exists");
+
+        address payable creator = msg.sender;
+        _products[id].creator = creator;
+        _products[id].uri = uri_;
+        super._mint(creator, id, amount, msg.data);
     }
 
-    function _mint(address payable account, uint256 id, uint256 amount, bytes memory data, string memory uri_) internal virtual {
-        if (_products[id].creator == address(0)) {
-            _products[id].creator = account;
-            _products[id].uri = uri_;
-        } else {
-            require( _products[id].creator == account, "SOVEREN: Mint more can token creator only");
-        }
-        super._mint( account, id, amount, data);
+    function mintMore(uint256 id, uint256 amount) public virtual {
+        require( _products[id].creator == msg.sender, "SOVEREN: Mint more can token creator only");
+
+        super._mint(msg.sender, id, amount, msg.data);
     }
+
 
     function burn(uint256 id, uint256 amount) public virtual {
-        _burn(msg.sender, id, amount);
+        super._burn(msg.sender, id, amount);
     }
 
-    function _burn(address account, uint256 id, uint256 amount) internal override virtual {
-        require( _products[id].creator == account, "SOVEREN: Burn can token creator only");
-        super._burn(account, id, amount);
-    }
 
 
 }
