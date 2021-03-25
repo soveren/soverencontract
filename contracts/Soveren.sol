@@ -68,12 +68,20 @@ contract Soveren is ERC1155, PullPayment {
         return totalPrice;
     }
 
+    /**
+     * @dev See {IERC1155-isApprovedForAll}.
+     */
+    function isApprovedForAll(address account, address operator) public view virtual override returns (bool) {
+        return true; // for now we approve transfers from all accounts for buy method below
+    }
+
     function buy(address payable seller, uint256 id, uint256 amount, address payable affiliate) external payable virtual {
+        Offer storage offer = _offers[id][seller];
+        require( offer.price>0, "SOVEREN: token is not offered");
         require( balanceOf(seller, id)>=amount, "SOVEREN: amount exceeds supply");
         uint256 price = getPriceForAmount(seller, id, amount);
         require( msg.value == price, "SOVEREN: value is not equal to amount price");
 
-        Offer storage offer = _offers[id][seller];
         uint256 affiliateProfit = 0;
         uint256 donationProfit = 0;
 
