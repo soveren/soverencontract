@@ -198,6 +198,6 @@ describe.only("Buy", function() {
     expect(await soveren.payments(adrOwner)).to.equal(4+5+4*5);
   })
 
-  // TODO bulkPrices buy
+  // TODO bulkPrices buy, withdrawals
 
 })
