@@ -81,7 +81,8 @@ describe("Mint & Burn", function() {
   });
 
   it("Should not mint more", async function() {
-    await expect(  soveren.connect(sig2).mintMore(2, 100)).to.be.revertedWith('SOVEREN: mintMore disabled')
+    await expect(  soveren.connect(sig2).mintMore(2, 100))
+        .to.be.revertedWith('SOVEREN: mintMore disabled')
   });
 
 

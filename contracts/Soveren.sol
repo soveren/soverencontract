@@ -128,7 +128,7 @@ contract Soveren is ERC1155, PullPayment {
         _mint(creator, id, amount, msg.data);
     }
 
-    function mintMore(uint256 id, uint256 amount) public virtual {
+    function mintMore(uint256 id, uint256 amount) external virtual {
         require( _products[id].creator == msg.sender, "SOVEREN: Mint more can token creator only");
         require( _products[id].canMintMore, "SOVEREN: mintMore disabled");
 
@@ -136,7 +136,7 @@ contract Soveren is ERC1155, PullPayment {
     }
 
 
-    function burn(uint256 id, uint256 amount) public virtual {
+    function burn(uint256 id, uint256 amount) external virtual {
         _burn(msg.sender, id, amount);
     }
 
