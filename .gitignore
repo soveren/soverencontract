@@ -5,3 +5,4 @@ cache
 artifacts
 .nyc_output
 coverage
+coverage.json

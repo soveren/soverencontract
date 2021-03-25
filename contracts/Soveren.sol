@@ -33,6 +33,7 @@ contract Soveren is ERC1155, PullPayment {
     mapping (uint256 => mapping(address => Offer)) private _offers;
 
     string constant  _DO_NOT_HAVE_SUCH_TOKEN = "SOVEREN: You do not have such token";
+    string constant  _TOKEN_IS_NOT_OFFERED   = "SOVEREN: Token is not offered";
 
     address payable addressForDonations;
 
@@ -63,7 +64,7 @@ contract Soveren is ERC1155, PullPayment {
     function getPriceForAmount(address payable seller, uint256 id, uint256 amount) public view virtual returns (uint256) {
         // TODO calc bulk prices
         uint256 basePrice = _offers[id][seller].price;
-        require( basePrice > 0, "SOVEREN: Token is not offered" );
+        require( basePrice > 0, _TOKEN_IS_NOT_OFFERED );
         uint totalPrice = basePrice.mul(amount);
         return totalPrice;
     }
@@ -77,7 +78,7 @@ contract Soveren is ERC1155, PullPayment {
 
     function buy(address payable seller, uint256 id, uint256 amount, address payable affiliate) external payable virtual {
         Offer storage offer = _offers[id][seller];
-        require( offer.price>0, "SOVEREN: token is not offered");
+        require( offer.price>0, _TOKEN_IS_NOT_OFFERED);
         require( balanceOf(seller, id)>=amount, "SOVEREN: amount exceeds supply");
         uint256 price = getPriceForAmount(seller, id, amount);
         require( msg.value == price, "SOVEREN: value is not equal to amount price");
@@ -97,8 +98,8 @@ contract Soveren is ERC1155, PullPayment {
 
         // Transfer ETH to the beneficiaries
         _asyncTransfer( seller, sellerProfit);
-        _asyncTransfer( affiliate, affiliateProfit);
-        _asyncTransfer( addressForDonations, donationProfit);
+        if (affiliateProfit>0) _asyncTransfer( affiliate, affiliateProfit);
+        if (donationProfit>0)  _asyncTransfer( addressForDonations, donationProfit);
 
         // Transfer tokens to buyers
         safeTransferFrom( seller, msg.sender, id, amount, msg.data);

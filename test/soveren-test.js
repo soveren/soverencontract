@@ -123,6 +123,11 @@ describe("Offers", function() {
     );
   });
 
+  it("Should not getPriceForAmount", async function() {
+    await expect( soveren.getPriceForAmount(adr1, 99999, 1))
+      .to.be.revertedWith('SOVEREN: Token is not offered')
+  });
+
   it("Should getPriceForAmount", async function() {
     expect(await soveren.getPriceForAmount(adr1, 3, 1)).to.equal( 1000);
   });
@@ -138,7 +143,7 @@ describe("Offers", function() {
 describe("Buy", function() {
   it("Should not buy not offered token", async function () {
     await expect(  soveren.connect(sig2).buy(adr1, 4, 1, AddressZero, {value:100}))
-        .to.be.revertedWith('SOVEREN: token is not offered')
+        .to.be.revertedWith('SOVEREN: Token is not offered')
 
   })
 
@@ -201,6 +206,23 @@ describe("Buy", function() {
     expect(await soveren.payments(adr1)).to.equal(76+95+380);
     expect(await soveren.payments(adr3)).to.equal(20+20*5);
     expect(await soveren.payments(adrOwner)).to.equal(4+5+4*5);
+  })
+
+  it("Should create offer w/o affiliate & donation", async function () {
+    await soveren.connect(sig1).makeOffer(4, 100, [1, 2, 3, 4, 5], 0, 0)
+    expect(await soveren.getOffer(adr1, 4)).to.deep.equal(
+        // 0% - affiliate interest, 0% donation
+        [ethers.BigNumber.from(100), [1, 2, 3, 4, 5], 0, 0]
+    )
+  })
+
+  it("Should buy 1 w/o affiliate & donation", async function () {
+    await expect(() => soveren.connect(sig2).buy(adr1, 4, 1, AddressZero, {value:100}))
+        .to.changeEtherBalances([sig2, sigContract], [-100,0]) //TODO FIX -100,100
+    expect(await soveren.balanceOf(adr1, 4)).to.equal(498-5-1);
+    expect(await soveren.balanceOf(adr2, 4)).to.equal(2+5+1);
+    // affiliate profit 0, donation 0, seller profit = (100-(0+0)) = 100
+    expect(await soveren.payments(adr1)).to.equal(76+95+380+100);
   })
 
   // TODO bulkPrices buy, withdrawals
