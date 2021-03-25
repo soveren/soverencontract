@@ -51,15 +51,18 @@ describe("Mint & Burn", function() {
   });
 
   it("Should not mint from another address", async function() {
-    await expect(soveren.connect(sig2).mint(1, 100, uri1, private1, true)).to.be.revertedWith('SOVEREN: Token already exists')
+    await expect(soveren.connect(sig2).mint(1, 100, uri1, private1, true))
+        .to.be.revertedWith('SOVEREN: Token already exists')
   });
 
   it("Should not mint more from another address", async function() {
-    await expect(soveren.connect(sig2).mintMore(1, 100)).to.be.revertedWith('SOVEREN: Mint more can token creator only')
+    await expect(soveren.connect(sig2).mintMore(1, 100))
+        .to.be.revertedWith('SOVEREN: Mint more can token creator only')
   });
 
   it("Should not burn exceed", async function() {
-    await expect( soveren.connect(sig1).burn(1, 99999)).to.be.revertedWith('ERC1155: burn amount exceeds balance')
+    await expect( soveren.connect(sig1).burn(1, 99999))
+        .to.be.revertedWith('ERC1155: burn amount exceeds balance')
   });
 
   it("Should burn", async function() {
@@ -68,7 +71,8 @@ describe("Mint & Burn", function() {
   });
 
   it("Should not burn exceed sig2", async function() {
-    await expect( soveren.connect(sig2).burn(1, 50)).to.be.revertedWith('ERC1155: burn amount exceeds balance')
+    await expect( soveren.connect(sig2).burn(1, 50))
+        .to.be.revertedWith('ERC1155: burn amount exceeds balance')
   });
 
   it("Should mint new product sig2", async function() {
@@ -130,7 +134,7 @@ describe("Offers", function() {
 
 })
 
-describe.only("Buy", function() {
+describe("Buy", function() {
   it("Should not buy not offered token", async function () {
     await expect(  soveren.connect(sig2).buy(adr1, 4, 1, AddressZero, {value:100}))
         .to.be.revertedWith('SOVEREN: token is not offered')

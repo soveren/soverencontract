@@ -5,7 +5,5 @@ export { EscrowFactory } from "./EscrowFactory";
 export type { Escrow } from "./Escrow";
 export { ERC1155Factory } from "./ERC1155Factory";
 export type { ERC1155 } from "./ERC1155";
-export { GreeterFactory } from "./GreeterFactory";
-export type { Greeter } from "./Greeter";
 export { SoverenFactory } from "./SoverenFactory";
 export type { Soveren } from "./Soveren";
