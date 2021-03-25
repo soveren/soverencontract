@@ -51,6 +51,10 @@ contract Soveren is ERC1155, PullPayment {
         });
     }
 
+    function removeOffer(uint256 id) external virtual {
+        delete _offers[id][msg.sender];
+    }
+
     function getOffer(address payable seller, uint256 id) external view virtual returns (Offer memory){
         return _offers[id][seller];
     }
