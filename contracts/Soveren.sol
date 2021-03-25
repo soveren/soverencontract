@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import "@openzeppelin/contracts/payment/PullPayment.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
-import "hardhat/console.sol";
+import "hardhat/console.sol"; //TODO check what log removed for production https://hardhat.org/plugins/hardhat-log-remover.html
 
 contract Soveren is ERC1155, PullPayment {
     using SafeMath for uint256;
