@@ -109,6 +109,21 @@ describe("Offers", function() {
     );
   });
 
+  it("Should not create offer (affiliateInterest too high)", async function() {
+    await expect(  soveren.connect(sig1).makeOffer(3, 1000, [], 100, 5 ))
+        .to.be.revertedWith('SOVEREN: Percents must be less 100')
+  });
+
+  it("Should not create offer (donation too high)", async function() {
+    await expect(  soveren.connect(sig1).makeOffer(3, 1000, [], 10, 100 ))
+        .to.be.revertedWith('SOVEREN: Percents must be less 100')
+  });
+
+  it("Should not create offer (wrong discounts order)", async function() {
+    await expect(  soveren.connect(sig1).makeOffer(3, 1000, [1,2,3,4,1,5], 10, 1 ))
+        .to.be.revertedWith('SOVEREN: Each next discount must be higher')
+  });
+
   it("Should remove offer", async function() {
     await soveren.connect(sig1).removeOffer(3)
     expect(await soveren.getOffer(adr1, 3)).to.deep.equal(

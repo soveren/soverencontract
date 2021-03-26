@@ -32,8 +32,9 @@ contract Soveren is ERC1155, PullPayment {
     // Mapping from token ID to offers
     mapping (uint256 => mapping(address => Offer)) private _offers;
 
-    string constant  _DO_NOT_HAVE_SUCH_TOKEN = "SOVEREN: You do not have such token";
-    string constant  _TOKEN_IS_NOT_OFFERED   = "SOVEREN: Token is not offered";
+    string constant  _DO_NOT_HAVE_SUCH_TOKEN     = "SOVEREN: You do not have such token";
+    string constant  _TOKEN_IS_NOT_OFFERED       = "SOVEREN: Token is not offered";
+    string constant  _PERCENTS_MUST_BE_LESS_100  = "SOVEREN: Percents must be less 100";
 
     address payable addressForDonations;
 
@@ -42,10 +43,18 @@ contract Soveren is ERC1155, PullPayment {
     }
 
     function makeOffer(uint256 id, uint256 price, uint8[] memory bulkDiscounts, uint8 affiliateInterest, uint8 donation ) external virtual {
-        require(balanceOf(msg.sender, id)>0, _DO_NOT_HAVE_SUCH_TOKEN);
-        // TODO check all fields
-        // donation, affiliate, discounts: 0-99
-        // every next discount must be bigger
+        require( balanceOf(msg.sender, id)>0, _DO_NOT_HAVE_SUCH_TOKEN);
+        require( affiliateInterest<100, _PERCENTS_MUST_BE_LESS_100);
+        require( donation<100, _PERCENTS_MUST_BE_LESS_100);
+
+        uint8 lastDiscount=0;
+        for(uint i=0; i<bulkDiscounts.length;i++) {
+            uint8 discount = bulkDiscounts[i];
+            require( discount<100, _PERCENTS_MUST_BE_LESS_100);
+            require( discount>lastDiscount, "SOVEREN: Each next discount must be higher");
+            lastDiscount=discount;
+        }
+
         _offers[id][msg.sender] = Offer({
             price: price, bulkDiscounts: bulkDiscounts,
             affiliateInterest: affiliateInterest, donation:donation
