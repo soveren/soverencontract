@@ -69,7 +69,6 @@ contract Soveren is ERC1155, PullPayment {
         return _offers[id][seller];
     }
 
-
     function getPriceForAmount(address payable seller, uint256 id, uint256 amount) public view virtual returns (uint256) {
         // TODO calc bulk prices
         uint256 basePrice = _offers[id][seller].price;

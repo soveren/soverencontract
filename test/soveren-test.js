@@ -124,6 +124,11 @@ describe("Offers", function() {
         .to.be.revertedWith('SOVEREN: Each next discount must be higher')
   });
 
+  it("Should not create offer (discount too high)", async function() {
+    await expect(  soveren.connect(sig1).makeOffer(3, 1000, [1,2,3,4,100,5], 10, 1 ))
+        .to.be.revertedWith('SOVEREN: Percents must be less 100')
+  });
+
   it("Should remove offer", async function() {
     await soveren.connect(sig1).removeOffer(3)
     expect(await soveren.getOffer(adr1, 3)).to.deep.equal(
