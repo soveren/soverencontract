@@ -70,10 +70,22 @@ contract Soveren is ERC1155, PullPayment {
     }
 
     function getPriceForAmount(address payable seller, uint256 id, uint256 amount) public view virtual returns (uint256) {
-        // TODO calc bulk prices
-        uint256 basePrice = _offers[id][seller].price;
+        Offer memory offer = _offers[id][seller];
+        uint256 basePrice = offer.price;
         require( basePrice > 0, _TOKEN_IS_NOT_OFFERED );
-        uint totalPrice = basePrice.mul(amount);
+
+        uint8[] memory bulkDiscounts = offer.bulkDiscounts;
+        uint8 discount = 0;
+        uint256 discountAmount = 10;
+
+        for(uint i=0; i<bulkDiscounts.length; i++) {
+            if (amount>=discountAmount) discount=bulkDiscounts[i];
+            else break;
+            discountAmount*=10;
+        }
+
+        uint256 discountedPrice = basePrice.mul(100-discount).div(100);
+        uint256 totalPrice = discountedPrice.mul(amount);
         return totalPrice;
     }
 

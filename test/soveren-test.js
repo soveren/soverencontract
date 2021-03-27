@@ -156,7 +156,23 @@ describe("Offers", function() {
     expect(await soveren.getPriceForAmount(adr1, 3, 5)).to.equal( 5000);
   });
 
-  // TODO check bulk prices
+  it("Should getPriceForAmount x10", async function() {
+    expect(await soveren.getPriceForAmount(adr1, 3, 10)).to.equal( 9900);
+  });
+
+  it("Should getPriceForAmount x100", async function() {
+    expect(await soveren.getPriceForAmount(adr1, 3, 100)).to.equal( 98000);
+  });
+
+  it("Should getPriceForAmount x1000", async function() {
+    expect(await soveren.getPriceForAmount(adr1, 3, 1000)).to.equal( 970000);
+  });
+
+  it("Should getPriceForAmount x100000", async function() {
+    expect(await soveren.getPriceForAmount(adr1, 3, 100000)).to.equal( 95000000);
+  });
+
+
 
 })
 
@@ -243,6 +259,15 @@ describe("Buy", function() {
     expect(await soveren.balanceOf(adr2, 4)).to.equal(2+5+1);
     // affiliate profit 0, donation 0, seller profit = (100-(0+0)) = 100
     expect(await soveren.payments(adr1)).to.equal(76+95+380+100);
+  })
+
+  it("Should buy 100 with discount 3%", async function () {
+    await expect(() => soveren.connect(sig2).buy(adr1, 4, 100, AddressZero, {value:9800}))
+        .to.changeEtherBalances([sig2, sigContract], [-9800,0]) //TODO FIX -100,100
+    expect(await soveren.balanceOf(adr1, 4)).to.equal(498-5-1-100);
+    expect(await soveren.balanceOf(adr2, 4)).to.equal(2+5+1+100);
+    // affiliate profit 0, donation 0, seller profit = (100-(0+0)) = 100
+    expect(await soveren.payments(adr1)).to.equal(76+95+380+100+9800);
   })
 
   // TODO bulkPrices buy, withdrawals

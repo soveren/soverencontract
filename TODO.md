@@ -1,7 +1,5 @@
 ### TODO
 
-- bulk prices
-- bulk sales
 - reserve in offer
 - rate
 - emit events (buy)
