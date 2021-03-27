@@ -36,6 +36,9 @@ contract Soveren is ERC1155, PullPayment {
     string constant  _DO_NOT_HAVE_SUCH_TOKEN     = "SOVEREN: You do not have such token";
     string constant  _TOKEN_IS_NOT_OFFERED       = "SOVEREN: Token is not offered";
     string constant  _PERCENTS_MUST_BE_LESS_100  = "SOVEREN: Percents must be less 100";
+    string constant  _ONLY_OWNER_CAN_TRANSFER    = "SOVEREN: Only owner can transfer";
+
+    event buySingle(address payable seller, uint256 id, uint256 amount, address payable affiliate);
 
     address payable addressForDonations;
 
@@ -98,7 +101,10 @@ contract Soveren is ERC1155, PullPayment {
     }
 
     function getOfferedAmount(address payable seller, uint256 id) public view virtual returns (uint256){
-        return balanceOf(seller, id) - _offers[id][seller].reserve;
+        uint256 balance = balanceOf(seller, id);
+        uint256 reserve = _offers[id][seller].reserve;
+        if (balance > reserve) return balance.sub(reserve);
+        else return 0;
     }
 
     function buy(address payable seller, uint256 id, uint256 amount, address payable affiliate) external payable virtual {
@@ -126,8 +132,9 @@ contract Soveren is ERC1155, PullPayment {
         if (affiliateProfit>0) _asyncTransfer( affiliate, affiliateProfit);
         if (donationProfit>0)  _asyncTransfer( addressForDonations, donationProfit);
 
-        // Transfer tokens to buyers
-        safeTransferFrom( seller, msg.sender, id, amount, msg.data);
+        // Transfer tokens to buyer
+        super.safeTransferFrom( seller, msg.sender, id, amount, msg.data);
+        emit buySingle(seller, id, amount, affiliate);
     }
 
 
@@ -140,7 +147,8 @@ contract Soveren is ERC1155, PullPayment {
         return _products[id].privateUri;
     }
 
-    function mint(uint256 id, uint256 amount, string memory uri_, string memory privateUri_, bool canMintMore) public virtual {
+    function mint(uint256 id, uint256 amount, string memory uri_, string memory privateUri_, bool canMintMore)
+    public virtual {
         require( _products[id].creator == address(0), "SOVEREN: Token already exists");
 
         address payable creator = msg.sender;
@@ -165,6 +173,22 @@ contract Soveren is ERC1155, PullPayment {
     function burn(uint256 id, uint256 amount) external virtual {
         _burn(msg.sender, id, amount);
     }
+
+    function safeTransferFrom( address from, address to, uint256 id, uint256 amount, bytes memory data)
+    public virtual override
+    {
+        require(from == msg.sender, _ONLY_OWNER_CAN_TRANSFER );
+        super.safeTransferFrom( msg.sender, to, id, amount, data);
+    }
+
+    function safeBatchTransferFrom( address from, address to, uint256[] memory ids,
+        uint256[] memory amounts, bytes memory data
+    ) public virtual override
+    {
+        require(from == msg.sender, _ONLY_OWNER_CAN_TRANSFER );
+        super.safeBatchTransferFrom(msg.sender, to, ids, amounts, data);
+    }
+    
 
 
 
