@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import "@openzeppelin/contracts/payment/PullPayment.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
-//import "hardhat/console.sol"; //TODO check what log removed for production https://hardhat.org/plugins/hardhat-log-remover.html
+//import "hardhat/console.sol";
 
 contract Soveren is ERC1155, PullPayment, ReentrancyGuard {
     using SafeMath for uint256;
@@ -236,15 +236,21 @@ contract Soveren is ERC1155, PullPayment, ReentrancyGuard {
         _burn(msg.sender, id, amount);
     }
 
-    function safeTransferFrom( address from, address to, uint256 id, uint256 amount, bytes memory data)
+    function safeTransferFrom(
+        address from, address to,
+        uint256 id, uint256 amount,
+        bytes memory data)
     public nonReentrant virtual override
     {
         require(from == msg.sender, _ONLY_OWNER_CAN_TRANSFER );
         super.safeTransferFrom( msg.sender, to, id, amount, data);
     }
 
-    function safeBatchTransferFrom( address from, address to, uint256[] memory ids,
-        uint256[] memory amounts, bytes memory data
+    function safeBatchTransferFrom(
+        address from, address to,
+        uint256[] memory ids,
+        uint256[] memory amounts,
+        bytes memory data
     ) public nonReentrant virtual override
     {
         require(from == msg.sender, _ONLY_OWNER_CAN_TRANSFER );

@@ -104,10 +104,14 @@ describe("Offers", function() {
   it("Should create offer", async function() {
     await soveren.connect(sig1).mint(3, 100, uri1, private1, true)
     expect(await soveren.balanceOf(adr1, 3)).to.equal(100);
-    await soveren.connect(sig1).makeOffer(3, 100, 0, [1,2,3,4,5], 20, 5 )
+    await soveren.connect(sig1).makeOffer(3, 100, 110, [1,2,3,4,5], 20, 5 )
     expect(await soveren.getOffer(adr1, 3)).to.deep.equal(
-        [BN(100), BN(0), [1,2,3,4,5], 20, 5 ]
+        [BN(100), BN(110), [1,2,3,4,5], 20, 5 ]
     );
+  });
+
+  it("Offered amount must be 0 (minted 100, reserved 110)", async function() {
+    expect(await soveren.getOfferedAmount(adr1, 3)).to.equal(0);
   });
 
   it("Should not create offer (affiliateInterest too high)", async function() {
@@ -276,23 +280,23 @@ describe("Buy", function() {
     expect(await soveren.payments(adr1)).to.equal(76+95+380+100+9800);
   })
 
-  // TODO bulkPrices buy, withdrawals
+  // TODO transfers, withdrawals
 
 })
 
 describe("Rating", function() {
-  it("Should not rate", async function () {
-    await expect(soveren.connect(sig2).buy(adr1, 4, 1, AddressZero, {value: 100}))
-        .to.be.revertedWith('SOVEREN: Token is not offered')
-  })
-
-  it("Should create offer", async function () {
-    await soveren.connect(sig1).mint(4, 500, uri1, private1, true)
-    expect(await soveren.balanceOf(adr1, 4)).to.equal(500);
-    await soveren.connect(sig1).makeOffer(4, 100, 400, [1, 2, 3, 4, 5], 20, 5)
-    expect(await soveren.getOffer(adr1, 4)).to.deep.equal(
-        // 20% - affiliate interest, 5% donation
-        [BN(100), BN(400), [1, 2, 3, 4, 5], 20, 5]
-    )
-  })
+  // it("Should not rate", async function () {
+  //   await expect(soveren.connect(sig2).buy(adr1, 4, 1, AddressZero, {value: 100}))
+  //       .to.be.revertedWith('SOVEREN: Token is not offered')
+  // })
+  //
+  // it("Should create offer", async function () {
+  //   await soveren.connect(sig1).mint(4, 500, uri1, private1, true)
+  //   expect(await soveren.balanceOf(adr1, 4)).to.equal(500);
+  //   await soveren.connect(sig1).makeOffer(4, 100, 400, [1, 2, 3, 4, 5], 20, 5)
+  //   expect(await soveren.getOffer(adr1, 4)).to.deep.equal(
+  //       // 20% - affiliate interest, 5% donation
+  //       [BN(100), BN(400), [1, 2, 3, 4, 5], 20, 5]
+  //   )
+  // })
 })
