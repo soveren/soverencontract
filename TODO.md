@@ -1,6 +1,5 @@
 ### TODO
 
-- reserve in offer
 - rate
 - emit events (buy)
 - ReentrancyGuard withdraw, buy

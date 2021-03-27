@@ -27,11 +27,11 @@ interface SoverenInterface extends ethers.utils.Interface {
     "balanceOfBatch(address[],uint256[])": FunctionFragment;
     "burn(uint256,uint256)": FunctionFragment;
     "buy(address,uint256,uint256,address)": FunctionFragment;
-    "c_0xf15ee5e9(bytes32)": FunctionFragment;
     "getOffer(address,uint256)": FunctionFragment;
+    "getOfferedAmount(address,uint256)": FunctionFragment;
     "getPriceForAmount(address,uint256,uint256)": FunctionFragment;
     "isApprovedForAll(address,address)": FunctionFragment;
-    "makeOffer(uint256,uint256,uint8[],uint8,uint8)": FunctionFragment;
+    "makeOffer(uint256,uint256,uint256,uint8[],uint8,uint8)": FunctionFragment;
     "mint(uint256,uint256,string,string,bool)": FunctionFragment;
     "mintMore(uint256,uint256)": FunctionFragment;
     "payments(address)": FunctionFragment;
@@ -62,11 +62,11 @@ interface SoverenInterface extends ethers.utils.Interface {
     values: [string, BigNumberish, BigNumberish, string]
   ): string;
   encodeFunctionData(
-    functionFragment: "c_0xf15ee5e9",
-    values: [BytesLike]
+    functionFragment: "getOffer",
+    values: [string, BigNumberish]
   ): string;
   encodeFunctionData(
-    functionFragment: "getOffer",
+    functionFragment: "getOfferedAmount",
     values: [string, BigNumberish]
   ): string;
   encodeFunctionData(
@@ -80,6 +80,7 @@ interface SoverenInterface extends ethers.utils.Interface {
   encodeFunctionData(
     functionFragment: "makeOffer",
     values: [
+      BigNumberish,
       BigNumberish,
       BigNumberish,
       BigNumberish[],
@@ -133,11 +134,11 @@ interface SoverenInterface extends ethers.utils.Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "burn", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "buy", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "getOffer", data: BytesLike): Result;
   decodeFunctionResult(
-    functionFragment: "c_0xf15ee5e9",
+    functionFragment: "getOfferedAmount",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(functionFragment: "getOffer", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "getPriceForAmount",
     data: BytesLike
@@ -264,20 +265,6 @@ export class Soveren extends Contract {
       overrides?: PayableOverrides
     ): Promise<ContractTransaction>;
 
-    c_0xf15ee5e9(
-      c__0xf15ee5e9: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<{
-      0: void;
-    }>;
-
-    "c_0xf15ee5e9(bytes32)"(
-      c__0xf15ee5e9: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<{
-      0: void;
-    }>;
-
     getOffer(
       seller: string,
       id: BigNumberish,
@@ -285,13 +272,15 @@ export class Soveren extends Contract {
     ): Promise<{
       0: {
         price: BigNumber;
+        reserve: BigNumber;
         bulkDiscounts: number[];
         affiliateInterest: number;
         donation: number;
         0: BigNumber;
-        1: number[];
-        2: number;
+        1: BigNumber;
+        2: number[];
         3: number;
+        4: number;
       };
     }>;
 
@@ -302,14 +291,32 @@ export class Soveren extends Contract {
     ): Promise<{
       0: {
         price: BigNumber;
+        reserve: BigNumber;
         bulkDiscounts: number[];
         affiliateInterest: number;
         donation: number;
         0: BigNumber;
-        1: number[];
-        2: number;
+        1: BigNumber;
+        2: number[];
         3: number;
+        4: number;
       };
+    }>;
+
+    getOfferedAmount(
+      seller: string,
+      id: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<{
+      0: BigNumber;
+    }>;
+
+    "getOfferedAmount(address,uint256)"(
+      seller: string,
+      id: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<{
+      0: BigNumber;
     }>;
 
     getPriceForAmount(
@@ -349,15 +356,17 @@ export class Soveren extends Contract {
     makeOffer(
       id: BigNumberish,
       price: BigNumberish,
+      reserve: BigNumberish,
       bulkDiscounts: BigNumberish[],
       affiliateInterest: BigNumberish,
       donation: BigNumberish,
       overrides?: Overrides
     ): Promise<ContractTransaction>;
 
-    "makeOffer(uint256,uint256,uint8[],uint8,uint8)"(
+    "makeOffer(uint256,uint256,uint256,uint8[],uint8,uint8)"(
       id: BigNumberish,
       price: BigNumberish,
+      reserve: BigNumberish,
       bulkDiscounts: BigNumberish[],
       affiliateInterest: BigNumberish,
       donation: BigNumberish,
@@ -571,29 +580,21 @@ export class Soveren extends Contract {
     overrides?: PayableOverrides
   ): Promise<ContractTransaction>;
 
-  c_0xf15ee5e9(
-    c__0xf15ee5e9: BytesLike,
-    overrides?: CallOverrides
-  ): Promise<void>;
-
-  "c_0xf15ee5e9(bytes32)"(
-    c__0xf15ee5e9: BytesLike,
-    overrides?: CallOverrides
-  ): Promise<void>;
-
   getOffer(
     seller: string,
     id: BigNumberish,
     overrides?: CallOverrides
   ): Promise<{
     price: BigNumber;
+    reserve: BigNumber;
     bulkDiscounts: number[];
     affiliateInterest: number;
     donation: number;
     0: BigNumber;
-    1: number[];
-    2: number;
+    1: BigNumber;
+    2: number[];
     3: number;
+    4: number;
   }>;
 
   "getOffer(address,uint256)"(
@@ -602,14 +603,28 @@ export class Soveren extends Contract {
     overrides?: CallOverrides
   ): Promise<{
     price: BigNumber;
+    reserve: BigNumber;
     bulkDiscounts: number[];
     affiliateInterest: number;
     donation: number;
     0: BigNumber;
-    1: number[];
-    2: number;
+    1: BigNumber;
+    2: number[];
     3: number;
+    4: number;
   }>;
+
+  getOfferedAmount(
+    seller: string,
+    id: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<BigNumber>;
+
+  "getOfferedAmount(address,uint256)"(
+    seller: string,
+    id: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<BigNumber>;
 
   getPriceForAmount(
     seller: string,
@@ -640,15 +655,17 @@ export class Soveren extends Contract {
   makeOffer(
     id: BigNumberish,
     price: BigNumberish,
+    reserve: BigNumberish,
     bulkDiscounts: BigNumberish[],
     affiliateInterest: BigNumberish,
     donation: BigNumberish,
     overrides?: Overrides
   ): Promise<ContractTransaction>;
 
-  "makeOffer(uint256,uint256,uint8[],uint8,uint8)"(
+  "makeOffer(uint256,uint256,uint256,uint8[],uint8,uint8)"(
     id: BigNumberish,
     price: BigNumberish,
+    reserve: BigNumberish,
     bulkDiscounts: BigNumberish[],
     affiliateInterest: BigNumberish,
     donation: BigNumberish,
@@ -834,29 +851,21 @@ export class Soveren extends Contract {
       overrides?: CallOverrides
     ): Promise<void>;
 
-    c_0xf15ee5e9(
-      c__0xf15ee5e9: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    "c_0xf15ee5e9(bytes32)"(
-      c__0xf15ee5e9: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
     getOffer(
       seller: string,
       id: BigNumberish,
       overrides?: CallOverrides
     ): Promise<{
       price: BigNumber;
+      reserve: BigNumber;
       bulkDiscounts: number[];
       affiliateInterest: number;
       donation: number;
       0: BigNumber;
-      1: number[];
-      2: number;
+      1: BigNumber;
+      2: number[];
       3: number;
+      4: number;
     }>;
 
     "getOffer(address,uint256)"(
@@ -865,14 +874,28 @@ export class Soveren extends Contract {
       overrides?: CallOverrides
     ): Promise<{
       price: BigNumber;
+      reserve: BigNumber;
       bulkDiscounts: number[];
       affiliateInterest: number;
       donation: number;
       0: BigNumber;
-      1: number[];
-      2: number;
+      1: BigNumber;
+      2: number[];
       3: number;
+      4: number;
     }>;
+
+    getOfferedAmount(
+      seller: string,
+      id: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    "getOfferedAmount(address,uint256)"(
+      seller: string,
+      id: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
 
     getPriceForAmount(
       seller: string,
@@ -903,15 +926,17 @@ export class Soveren extends Contract {
     makeOffer(
       id: BigNumberish,
       price: BigNumberish,
+      reserve: BigNumberish,
       bulkDiscounts: BigNumberish[],
       affiliateInterest: BigNumberish,
       donation: BigNumberish,
       overrides?: CallOverrides
     ): Promise<void>;
 
-    "makeOffer(uint256,uint256,uint8[],uint8,uint8)"(
+    "makeOffer(uint256,uint256,uint256,uint8[],uint8,uint8)"(
       id: BigNumberish,
       price: BigNumberish,
+      reserve: BigNumberish,
       bulkDiscounts: BigNumberish[],
       affiliateInterest: BigNumberish,
       donation: BigNumberish,
@@ -1121,16 +1146,6 @@ export class Soveren extends Contract {
       overrides?: PayableOverrides
     ): Promise<BigNumber>;
 
-    c_0xf15ee5e9(
-      c__0xf15ee5e9: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    "c_0xf15ee5e9(bytes32)"(
-      c__0xf15ee5e9: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
     getOffer(
       seller: string,
       id: BigNumberish,
@@ -1138,6 +1153,18 @@ export class Soveren extends Contract {
     ): Promise<BigNumber>;
 
     "getOffer(address,uint256)"(
+      seller: string,
+      id: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    getOfferedAmount(
+      seller: string,
+      id: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    "getOfferedAmount(address,uint256)"(
       seller: string,
       id: BigNumberish,
       overrides?: CallOverrides
@@ -1172,15 +1199,17 @@ export class Soveren extends Contract {
     makeOffer(
       id: BigNumberish,
       price: BigNumberish,
+      reserve: BigNumberish,
       bulkDiscounts: BigNumberish[],
       affiliateInterest: BigNumberish,
       donation: BigNumberish,
       overrides?: Overrides
     ): Promise<BigNumber>;
 
-    "makeOffer(uint256,uint256,uint8[],uint8,uint8)"(
+    "makeOffer(uint256,uint256,uint256,uint8[],uint8,uint8)"(
       id: BigNumberish,
       price: BigNumberish,
+      reserve: BigNumberish,
       bulkDiscounts: BigNumberish[],
       affiliateInterest: BigNumberish,
       donation: BigNumberish,
@@ -1364,16 +1393,6 @@ export class Soveren extends Contract {
       overrides?: PayableOverrides
     ): Promise<PopulatedTransaction>;
 
-    c_0xf15ee5e9(
-      c__0xf15ee5e9: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    "c_0xf15ee5e9(bytes32)"(
-      c__0xf15ee5e9: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
     getOffer(
       seller: string,
       id: BigNumberish,
@@ -1381,6 +1400,18 @@ export class Soveren extends Contract {
     ): Promise<PopulatedTransaction>;
 
     "getOffer(address,uint256)"(
+      seller: string,
+      id: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    getOfferedAmount(
+      seller: string,
+      id: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    "getOfferedAmount(address,uint256)"(
       seller: string,
       id: BigNumberish,
       overrides?: CallOverrides
@@ -1415,15 +1446,17 @@ export class Soveren extends Contract {
     makeOffer(
       id: BigNumberish,
       price: BigNumberish,
+      reserve: BigNumberish,
       bulkDiscounts: BigNumberish[],
       affiliateInterest: BigNumberish,
       donation: BigNumberish,
       overrides?: Overrides
     ): Promise<PopulatedTransaction>;
 
-    "makeOffer(uint256,uint256,uint8[],uint8,uint8)"(
+    "makeOffer(uint256,uint256,uint256,uint8[],uint8,uint8)"(
       id: BigNumberish,
       price: BigNumberish,
+      reserve: BigNumberish,
       bulkDiscounts: BigNumberish[],
       affiliateInterest: BigNumberish,
       donation: BigNumberish,

@@ -1,6 +1,7 @@
 const { ethers } = require("hardhat");
 const { expect } = require("chai");
 require("hardhat-typechain");
+const BN = ethers.BigNumber.from;
 
 
 let soveren, sigOwner, adrOwner, sigContract, adrContract,
@@ -96,50 +97,50 @@ describe("Mint & Burn", function() {
 describe("Offers", function() {
 
   it("Should not create offer", async function() {
-    await expect(  soveren.connect(sig1).makeOffer(3, 1000, [], 20, 5 ))
+    await expect(  soveren.connect(sig1).makeOffer(3, 1000, 0,[], 20, 5 ))
         .to.be.revertedWith('SOVEREN: You do not have such token')
   });
 
   it("Should create offer", async function() {
     await soveren.connect(sig1).mint(3, 100, uri1, private1, true)
     expect(await soveren.balanceOf(adr1, 3)).to.equal(100);
-    await soveren.connect(sig1).makeOffer(3, 100, [1,2,3,4,5], 20, 5 )
+    await soveren.connect(sig1).makeOffer(3, 100, 0, [1,2,3,4,5], 20, 5 )
     expect(await soveren.getOffer(adr1, 3)).to.deep.equal(
-        [ethers.BigNumber.from(100), [1,2,3,4,5], 20, 5 ]
+        [BN(100), BN(0), [1,2,3,4,5], 20, 5 ]
     );
   });
 
   it("Should not create offer (affiliateInterest too high)", async function() {
-    await expect(  soveren.connect(sig1).makeOffer(3, 1000, [], 100, 5 ))
+    await expect(  soveren.connect(sig1).makeOffer(3, 1000, 0,[], 100, 5 ))
         .to.be.revertedWith('SOVEREN: Percents must be less 100')
   });
 
   it("Should not create offer (donation too high)", async function() {
-    await expect(  soveren.connect(sig1).makeOffer(3, 1000, [], 10, 100 ))
+    await expect(  soveren.connect(sig1).makeOffer(3, 1000, 0, [], 10, 100 ))
         .to.be.revertedWith('SOVEREN: Percents must be less 100')
   });
 
   it("Should not create offer (wrong discounts order)", async function() {
-    await expect(  soveren.connect(sig1).makeOffer(3, 1000, [1,2,3,4,1,5], 10, 1 ))
+    await expect(  soveren.connect(sig1).makeOffer(3, 1000, 0, [1,2,3,4,1,5], 10, 1 ))
         .to.be.revertedWith('SOVEREN: Each next discount must be higher')
   });
 
   it("Should not create offer (discount too high)", async function() {
-    await expect(  soveren.connect(sig1).makeOffer(3, 1000, [1,2,3,4,100,5], 10, 1 ))
+    await expect(  soveren.connect(sig1).makeOffer(3, 1000, 0,[1,2,3,4,100,5], 10, 1 ))
         .to.be.revertedWith('SOVEREN: Percents must be less 100')
   });
 
   it("Should remove offer", async function() {
     await soveren.connect(sig1).removeOffer(3)
     expect(await soveren.getOffer(adr1, 3)).to.deep.equal(
-        [ethers.BigNumber.from(0), [], 0, 0 ]
+        [BN(0), BN(0), [], 0, 0 ]
     );
   });
 
   it("Should create offer", async function() {
-    await soveren.connect(sig1).makeOffer(3, 1000, [1,2,3,4,5], 20, 5 )
+    await soveren.connect(sig1).makeOffer(3, 1000, 0, [1,2,3,4,5], 20, 5 )
     expect(await soveren.getOffer(adr1, 3)).to.deep.equal(
-        [ethers.BigNumber.from(1000), [1,2,3,4,5], 20, 5 ]
+        [BN(1000), BN(0), [1,2,3,4,5], 20, 5 ]
     );
   });
 
@@ -186,10 +187,10 @@ describe("Buy", function() {
   it("Should create offer", async function () {
     await soveren.connect(sig1).mint(4, 500, uri1, private1, true)
     expect(await soveren.balanceOf(adr1, 4)).to.equal(500);
-    await soveren.connect(sig1).makeOffer(4, 100, [1, 2, 3, 4, 5], 20, 5)
+    await soveren.connect(sig1).makeOffer(4, 100, 400, [1, 2, 3, 4, 5], 20, 5)
     expect(await soveren.getOffer(adr1, 4)).to.deep.equal(
         // 20% - affiliate interest, 5% donation
-        [ethers.BigNumber.from(100), [1, 2, 3, 4, 5], 20, 5]
+        [BN(100), BN(400), [1, 2, 3, 4, 5], 20, 5]
     )
   })
 
@@ -205,6 +206,11 @@ describe("Buy", function() {
 
   it("Should not buy (amount exceeds supply)", async function () {
     await expect(  soveren.connect(sig2).buy(adr1, 4, 999999, adr3, {value:1}))
+        .to.be.revertedWith('SOVEREN: amount exceeds supply')
+  })
+
+  it("Should not buy (amount exceeds amount offered)", async function () {
+    await expect(  soveren.connect(sig2).buy(adr1, 4, 101, adr3, {value:1}))
         .to.be.revertedWith('SOVEREN: amount exceeds supply')
   })
 
@@ -245,10 +251,10 @@ describe("Buy", function() {
   })
 
   it("Should create offer w/o affiliate & donation", async function () {
-    await soveren.connect(sig1).makeOffer(4, 100, [1, 2, 3, 4, 5], 0, 0)
+    await soveren.connect(sig1).makeOffer(4, 100, 0, [1, 2, 3, 4, 5], 0, 0)
     expect(await soveren.getOffer(adr1, 4)).to.deep.equal(
         // 0% - affiliate interest, 0% donation
-        [ethers.BigNumber.from(100), [1, 2, 3, 4, 5], 0, 0]
+        [BN(100), BN(0), [1, 2, 3, 4, 5], 0, 0]
     )
   })
 

@@ -21,6 +21,7 @@ contract Soveren is ERC1155, PullPayment {
 
     struct Offer {
         uint256 price;            // base price ETH
+        uint256 reserve;          // how many tokens reserve (do not sell)
         uint8[] bulkDiscounts;    // discounts array for amount of 10,100,1000 etc.
         uint8 affiliateInterest;  // how many percents will receive promoter (0-99)
         uint8 donation;           // per product donation (percents, 0-99)
@@ -42,7 +43,7 @@ contract Soveren is ERC1155, PullPayment {
         addressForDonations = msg.sender;
     }
 
-    function makeOffer(uint256 id, uint256 price, uint8[] memory bulkDiscounts, uint8 affiliateInterest, uint8 donation ) external virtual {
+    function makeOffer(uint256 id, uint256 price, uint256 reserve, uint8[] memory bulkDiscounts, uint8 affiliateInterest, uint8 donation ) external virtual {
         require( balanceOf(msg.sender, id)>0, _DO_NOT_HAVE_SUCH_TOKEN);
         require( affiliateInterest<100, _PERCENTS_MUST_BE_LESS_100);
         require( donation<100, _PERCENTS_MUST_BE_LESS_100);
@@ -56,7 +57,7 @@ contract Soveren is ERC1155, PullPayment {
         }
 
         _offers[id][msg.sender] = Offer({
-            price: price, bulkDiscounts: bulkDiscounts,
+            price: price, reserve: reserve, bulkDiscounts: bulkDiscounts,
             affiliateInterest: affiliateInterest, donation:donation
         });
     }
@@ -96,10 +97,14 @@ contract Soveren is ERC1155, PullPayment {
         return true; // for now we approve transfers from all accounts for buy method below
     }
 
+    function getOfferedAmount(address payable seller, uint256 id) public view virtual returns (uint256){
+        return balanceOf(seller, id) - _offers[id][seller].reserve;
+    }
+
     function buy(address payable seller, uint256 id, uint256 amount, address payable affiliate) external payable virtual {
         Offer storage offer = _offers[id][seller];
         require( offer.price>0, _TOKEN_IS_NOT_OFFERED);
-        require( balanceOf(seller, id)>=amount, "SOVEREN: amount exceeds supply");
+        require( getOfferedAmount(seller, id)>=amount, "SOVEREN: amount exceeds supply");
         uint256 price = getPriceForAmount(seller, id, amount);
         require( msg.value == price, "SOVEREN: value is not equal to amount price");
 
