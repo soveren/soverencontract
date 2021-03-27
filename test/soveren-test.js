@@ -279,3 +279,20 @@ describe("Buy", function() {
   // TODO bulkPrices buy, withdrawals
 
 })
+
+describe("Rating", function() {
+  it("Should not rate", async function () {
+    await expect(soveren.connect(sig2).buy(adr1, 4, 1, AddressZero, {value: 100}))
+        .to.be.revertedWith('SOVEREN: Token is not offered')
+  })
+
+  it("Should create offer", async function () {
+    await soveren.connect(sig1).mint(4, 500, uri1, private1, true)
+    expect(await soveren.balanceOf(adr1, 4)).to.equal(500);
+    await soveren.connect(sig1).makeOffer(4, 100, 400, [1, 2, 3, 4, 5], 20, 5)
+    expect(await soveren.getOffer(adr1, 4)).to.deep.equal(
+        // 20% - affiliate interest, 5% donation
+        [BN(100), BN(400), [1, 2, 3, 4, 5], 20, 5]
+    )
+  })
+})

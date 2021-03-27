@@ -1,9 +1,8 @@
 ### TODO
 
-- rate
-- ReentrancyGuard withdraw, buy
-  https://docs.openzeppelin.com/contracts/3.x/api/utils#ReentrancyGuard
+- Rate 
 - Upgrades
+- Coverage 100%
 
 ### Later
-- Add Soveren contract compatibility
+- Add Soveren contract compatibility?
