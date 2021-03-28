@@ -20,8 +20,7 @@ before(async function () {
   soveren = await Soveren.deploy()
   await soveren.deployed();
 
-  sigContract = soveren.signer;
-  adrContract = soveren.signer.getAddress();
+  adrContract = soveren.address;
 
   [sigOwner, sig1, sig2, sig3] = await ethers.getSigners();
   adrOwner = await sigOwner.getAddress()
@@ -177,15 +176,12 @@ describe("Offers", function() {
     expect(await soveren.getPriceForAmount(adr1, 3, 100000)).to.equal( 95000000);
   });
 
-
-
 })
 
 describe("Buy", function() {
   it("Should not buy not offered token", async function () {
     await expect(  soveren.connect(sig2).buy(adr1, 4, 1, AddressZero, {value:100}))
         .to.be.revertedWith('SOVEREN: Token is not offered')
-
   })
 
   it("Should create offer", async function () {
@@ -220,7 +216,7 @@ describe("Buy", function() {
 
   it("Should buy 1 with affiliate", async function () {
     await expect(() => soveren.connect(sig2).buy(adr1, 4, 1, adr3, {value:100}))
-        .to.changeEtherBalances([sig2, sigContract], [-100,0]) //TODO -100,100
+        .to.changeEtherBalance(sig2, -100);
     expect(await soveren.balanceOf(adr1, 4)).to.equal(499);
     expect(await soveren.balanceOf(adr2, 4)).to.equal(1);
     // affiliate profit 20% = 20, donation 5% from 80 = 4, seller profit = (100-(80+4)) = 76
@@ -235,7 +231,7 @@ describe("Buy", function() {
 
   it("Should buy 1 w/o affiliate", async function () {
     await expect(() => soveren.connect(sig2).buy(adr1, 4, 1, AddressZero, {value:100}))
-        .to.changeEtherBalances([sig2, sigContract], [-100,0]) //TODO -100,100
+        .to.changeEtherBalance(sig2, -100);
     expect(await soveren.balanceOf(adr1, 4)).to.equal(498);
     expect(await soveren.balanceOf(adr2, 4)).to.equal(2);
     // affiliate profit 0, donation 5% from 100 = 5, seller profit = (100-5) = 95
@@ -245,7 +241,7 @@ describe("Buy", function() {
 
   it("Should buy 5 with affiliate", async function () {
     await expect(() => soveren.connect(sig2).buy(adr1, 4, 5, adr3, {value:100*5}))
-        .to.changeEtherBalances([sig2, sigContract], [-100*5,0]) //TODO -100,100
+        .to.changeEtherBalance(sig2, -100*5);
     expect(await soveren.balanceOf(adr1, 4)).to.equal(498-5);
     expect(await soveren.balanceOf(adr2, 4)).to.equal(2+5);
     // affiliate profit 20% = 20*5, donation 5% from 80 = 4*5, seller profit = (100-(80+4)) = 76*5 = 380
@@ -264,7 +260,7 @@ describe("Buy", function() {
 
   it("Should buy 1 w/o affiliate & donation", async function () {
     await expect(() => soveren.connect(sig2).buy(adr1, 4, 1, AddressZero, {value:100}))
-        .to.changeEtherBalances([sig2, sigContract], [-100,0]) //TODO FIX -100,100
+        .to.changeEtherBalance(sig2, -100);
     expect(await soveren.balanceOf(adr1, 4)).to.equal(498-5-1);
     expect(await soveren.balanceOf(adr2, 4)).to.equal(2+5+1);
     // affiliate profit 0, donation 0, seller profit = (100-(0+0)) = 100
@@ -273,7 +269,7 @@ describe("Buy", function() {
 
   it("Should buy 100 with discount 3%", async function () {
     await expect(() => soveren.connect(sig2).buy(adr1, 4, 100, AddressZero, {value:9800}))
-        .to.changeEtherBalances([sig2, sigContract], [-9800,0]) //TODO FIX -100,100
+        .to.changeEtherBalance(sig2, -9800);
     expect(await soveren.balanceOf(adr1, 4)).to.equal(498-5-1-100);
     expect(await soveren.balanceOf(adr2, 4)).to.equal(2+5+1+100);
     // affiliate profit 0, donation 0, seller profit = (100-(0+0)) = 100
@@ -282,23 +278,62 @@ describe("Buy", function() {
 
   it("Should withdraw payments seller", async function () {
     await expect(() => soveren.connect(sig1).withdrawPayments(adr1))
-        .to.changeEtherBalances([sig1, sigContract], [76+95+380+100+9800,0]) //TODO FIX -100,100
+        .to.changeEtherBalance(sig1, 76+95+380+100+9800)
     expect(await soveren.payments(adr1)).to.equal(0);
   })
 
   it("Should withdraw payments affiliate", async function () {
     await expect(() => soveren.connect(sig3).withdrawPayments(adr3))
-        .to.changeEtherBalances([sig3, sigContract], [20+20*5,0]) //TODO FIX
+        .to.changeEtherBalance(sig3, 20+20*5);
     expect(await soveren.payments(adr3)).to.equal(0);
   })
 
   it("Should withdraw donations owner", async function () {
     await expect(() => soveren.connect(sigOwner).withdrawPayments(adrOwner))
-        .to.changeEtherBalances([sigOwner], [4+5+4*5])
+        .to.changeEtherBalance(sigOwner, 4+5+4*5);
     expect(await soveren.payments(adrOwner)).to.equal(0);
   })
 
-  // TODO transfers, withdrawals
+
+  it("Should not transfer (only owner can transfer)", async function () {
+    await expect( soveren.connect(sig3)
+        .safeTransferFrom(adr2, adr3, 4, 1, 0x0 ))
+        .to.be.revertedWith('SOVEREN: Only owner can transfer')
+  })
+
+  it("Should not batch transfer (only owner can transfer)", async function () {
+    await expect( soveren.connect(sig3)
+        .safeBatchTransferFrom(adr2, adr3, [4], [1], 0x0 ))
+        .to.be.revertedWith('SOVEREN: Only owner can transfer')
+  })
+
+  it("Should not transfer (insufficient balance)", async function () {
+    await expect( soveren.connect(sig2)
+        .safeTransferFrom(adr2, adr3, 4, 99999, 0x0 ))
+        .to.be.revertedWith('ERC1155: insufficient balance for transfer')
+  })
+
+  it("Should transfer ", async function () {
+    const bal2 = await soveren.balanceOf(adr2, 4)
+    const bal3 = await soveren.balanceOf(adr3, 4)
+    await soveren.connect(sig2).transfer(adr3, 4, 10 )
+    expect(await soveren.balanceOf(adr2, 4)-bal2).to.equal(-10);
+    expect(await soveren.balanceOf(adr3, 4)-bal3).to.equal(+10);
+  })
+
+  it("Should batch transfer ", async function () {
+    await soveren.connect(sig2).mint(5, 1000, 'uri5', 'private5', true)
+    await soveren.connect(sig2).mint(6, 1000, 'uri6', 'private6', true)
+    const bal2_5 = await soveren.balanceOf(adr2, 5)
+    const bal2_6 = await soveren.balanceOf(adr2, 6)
+    const bal3_5 = await soveren.balanceOf(adr3, 5)
+    const bal3_6 = await soveren.balanceOf(adr3, 6)
+    await soveren.connect(sig2).batchTransfer(adr3, [5,6], [50,6]  )
+    expect(await soveren.balanceOf(adr2, 5)-bal2_5).to.equal(-50);
+    expect(await soveren.balanceOf(adr2, 6)-bal2_6).to.equal(-6);
+    expect(await soveren.balanceOf(adr3, 5)-bal3_5).to.equal(+50);
+    expect(await soveren.balanceOf(adr3, 6)-bal3_6).to.equal(+6);
+  })
 
 })
 

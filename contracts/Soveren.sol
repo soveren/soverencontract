@@ -243,7 +243,13 @@ contract Soveren is ERC1155, PullPayment, ReentrancyGuard {
     public nonReentrant virtual override
     {
         require(from == msg.sender, _ONLY_OWNER_CAN_TRANSFER );
-        super.safeTransferFrom( msg.sender, to, id, amount, data);
+        super.safeTransferFrom( from, to, id, amount, data);
+    }
+
+    function transfer( address to, uint256 id, uint256 amount)
+    public virtual
+    {
+        safeTransferFrom( msg.sender, to, id, amount, msg.data);
     }
 
     function safeBatchTransferFrom(
@@ -254,9 +260,14 @@ contract Soveren is ERC1155, PullPayment, ReentrancyGuard {
     ) public nonReentrant virtual override
     {
         require(from == msg.sender, _ONLY_OWNER_CAN_TRANSFER );
-        super.safeBatchTransferFrom(msg.sender, to, ids, amounts, data);
+        super.safeBatchTransferFrom(from, to, ids, amounts, data);
     }
-    
+
+    function batchTransfer( address to, uint256[] memory ids, uint256[] memory amounts
+    ) public virtual
+    {
+        safeBatchTransferFrom(msg.sender, to, ids, amounts, msg.data);
+    }
 
 
 

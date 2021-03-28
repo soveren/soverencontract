@@ -1,7 +1,9 @@
 ### TODO
 
-- FIX -100,100
 - Coverage 100%
+
+### Questions
+- How to get contract ethers balance?
 
 ### Later
 - Generate docs https://github.com/OpenZeppelin/solidity-docgen
