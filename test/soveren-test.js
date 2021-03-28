@@ -280,6 +280,24 @@ describe("Buy", function() {
     expect(await soveren.payments(adr1)).to.equal(76+95+380+100+9800);
   })
 
+  it("Should withdraw payments seller", async function () {
+    await expect(() => soveren.connect(sig1).withdrawPayments(adr1))
+        .to.changeEtherBalances([sig1, sigContract], [76+95+380+100+9800,0]) //TODO FIX -100,100
+    expect(await soveren.payments(adr1)).to.equal(0);
+  })
+
+  it("Should withdraw payments affiliate", async function () {
+    await expect(() => soveren.connect(sig3).withdrawPayments(adr3))
+        .to.changeEtherBalances([sig3, sigContract], [20+20*5,0]) //TODO FIX
+    expect(await soveren.payments(adr3)).to.equal(0);
+  })
+
+  it("Should withdraw donations owner", async function () {
+    await expect(() => soveren.connect(sigOwner).withdrawPayments(adrOwner))
+        .to.changeEtherBalances([sigOwner], [4+5+4*5])
+    expect(await soveren.payments(adrOwner)).to.equal(0);
+  })
+
   // TODO transfers, withdrawals
 
 })

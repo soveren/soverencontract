@@ -27,10 +27,12 @@ interface SoverenInterface extends ethers.utils.Interface {
     "balanceOfBatch(address[],uint256[])": FunctionFragment;
     "burn(uint256,uint256)": FunctionFragment;
     "buy(address,uint256,uint256,address)": FunctionFragment;
-    "c_0xf15ee5e9(bytes32)": FunctionFragment;
     "getOffer(address,uint256)": FunctionFragment;
     "getOfferedAmount(address,uint256)": FunctionFragment;
     "getPriceForAmount(address,uint256,uint256)": FunctionFragment;
+    "getRating(uint256)": FunctionFragment;
+    "getVotes(uint256,uint32,uint32)": FunctionFragment;
+    "getVotesCount(uint256)": FunctionFragment;
     "isApprovedForAll(address,address)": FunctionFragment;
     "makeOffer(uint256,uint256,uint256,uint8[],uint8,uint8)": FunctionFragment;
     "mint(uint256,uint256,string,string,bool)": FunctionFragment;
@@ -43,6 +45,7 @@ interface SoverenInterface extends ethers.utils.Interface {
     "setApprovalForAll(address,bool)": FunctionFragment;
     "supportsInterface(bytes4)": FunctionFragment;
     "uri(uint256)": FunctionFragment;
+    "vote(uint256,uint8,string)": FunctionFragment;
     "withdrawPayments(address)": FunctionFragment;
   };
 
@@ -63,10 +66,6 @@ interface SoverenInterface extends ethers.utils.Interface {
     values: [string, BigNumberish, BigNumberish, string]
   ): string;
   encodeFunctionData(
-    functionFragment: "c_0xf15ee5e9",
-    values: [BytesLike]
-  ): string;
-  encodeFunctionData(
     functionFragment: "getOffer",
     values: [string, BigNumberish]
   ): string;
@@ -77,6 +76,18 @@ interface SoverenInterface extends ethers.utils.Interface {
   encodeFunctionData(
     functionFragment: "getPriceForAmount",
     values: [string, BigNumberish, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getRating",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getVotes",
+    values: [BigNumberish, BigNumberish, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getVotesCount",
+    values: [BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "isApprovedForAll",
@@ -128,6 +139,10 @@ interface SoverenInterface extends ethers.utils.Interface {
   ): string;
   encodeFunctionData(functionFragment: "uri", values: [BigNumberish]): string;
   encodeFunctionData(
+    functionFragment: "vote",
+    values: [BigNumberish, BigNumberish, string]
+  ): string;
+  encodeFunctionData(
     functionFragment: "withdrawPayments",
     values: [string]
   ): string;
@@ -139,10 +154,6 @@ interface SoverenInterface extends ethers.utils.Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "burn", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "buy", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "c_0xf15ee5e9",
-    data: BytesLike
-  ): Result;
   decodeFunctionResult(functionFragment: "getOffer", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "getOfferedAmount",
@@ -150,6 +161,12 @@ interface SoverenInterface extends ethers.utils.Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "getPriceForAmount",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(functionFragment: "getRating", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "getVotes", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "getVotesCount",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -182,6 +199,7 @@ interface SoverenInterface extends ethers.utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "uri", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "vote", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "withdrawPayments",
     data: BytesLike
@@ -276,20 +294,6 @@ export class Soveren extends Contract {
       overrides?: PayableOverrides
     ): Promise<ContractTransaction>;
 
-    c_0xf15ee5e9(
-      c__0xf15ee5e9: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<{
-      0: void;
-    }>;
-
-    "c_0xf15ee5e9(bytes32)"(
-      c__0xf15ee5e9: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<{
-      0: void;
-    }>;
-
     getOffer(
       seller: string,
       id: BigNumberish,
@@ -360,6 +364,52 @@ export class Soveren extends Contract {
       overrides?: CallOverrides
     ): Promise<{
       0: BigNumber;
+    }>;
+
+    getRating(
+      id: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<{
+      0: number;
+    }>;
+
+    "getRating(uint256)"(
+      id: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<{
+      0: number;
+    }>;
+
+    getVotes(
+      id: BigNumberish,
+      skip: BigNumberish,
+      count: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<{
+      0: { comment: string; rating: number; 0: string; 1: number }[];
+    }>;
+
+    "getVotes(uint256,uint32,uint32)"(
+      id: BigNumberish,
+      skip: BigNumberish,
+      count: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<{
+      0: { comment: string; rating: number; 0: string; 1: number }[];
+    }>;
+
+    getVotesCount(
+      id: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<{
+      0: number;
+    }>;
+
+    "getVotesCount(uint256)"(
+      id: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<{
+      0: number;
     }>;
 
     isApprovedForAll(
@@ -542,6 +592,20 @@ export class Soveren extends Contract {
       0: string;
     }>;
 
+    vote(
+      id: BigNumberish,
+      rating: BigNumberish,
+      comment: string,
+      overrides?: Overrides
+    ): Promise<ContractTransaction>;
+
+    "vote(uint256,uint8,string)"(
+      id: BigNumberish,
+      rating: BigNumberish,
+      comment: string,
+      overrides?: Overrides
+    ): Promise<ContractTransaction>;
+
     withdrawPayments(
       payee: string,
       overrides?: Overrides
@@ -605,16 +669,6 @@ export class Soveren extends Contract {
     overrides?: PayableOverrides
   ): Promise<ContractTransaction>;
 
-  c_0xf15ee5e9(
-    c__0xf15ee5e9: BytesLike,
-    overrides?: CallOverrides
-  ): Promise<void>;
-
-  "c_0xf15ee5e9(bytes32)"(
-    c__0xf15ee5e9: BytesLike,
-    overrides?: CallOverrides
-  ): Promise<void>;
-
   getOffer(
     seller: string,
     id: BigNumberish,
@@ -674,6 +728,34 @@ export class Soveren extends Contract {
     amount: BigNumberish,
     overrides?: CallOverrides
   ): Promise<BigNumber>;
+
+  getRating(id: BigNumberish, overrides?: CallOverrides): Promise<number>;
+
+  "getRating(uint256)"(
+    id: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<number>;
+
+  getVotes(
+    id: BigNumberish,
+    skip: BigNumberish,
+    count: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<{ comment: string; rating: number; 0: string; 1: number }[]>;
+
+  "getVotes(uint256,uint32,uint32)"(
+    id: BigNumberish,
+    skip: BigNumberish,
+    count: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<{ comment: string; rating: number; 0: string; 1: number }[]>;
+
+  getVotesCount(id: BigNumberish, overrides?: CallOverrides): Promise<number>;
+
+  "getVotesCount(uint256)"(
+    id: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<number>;
 
   isApprovedForAll(
     account: string,
@@ -823,6 +905,20 @@ export class Soveren extends Contract {
 
   "uri(uint256)"(id: BigNumberish, overrides?: CallOverrides): Promise<string>;
 
+  vote(
+    id: BigNumberish,
+    rating: BigNumberish,
+    comment: string,
+    overrides?: Overrides
+  ): Promise<ContractTransaction>;
+
+  "vote(uint256,uint8,string)"(
+    id: BigNumberish,
+    rating: BigNumberish,
+    comment: string,
+    overrides?: Overrides
+  ): Promise<ContractTransaction>;
+
   withdrawPayments(
     payee: string,
     overrides?: Overrides
@@ -886,16 +982,6 @@ export class Soveren extends Contract {
       overrides?: CallOverrides
     ): Promise<void>;
 
-    c_0xf15ee5e9(
-      c__0xf15ee5e9: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    "c_0xf15ee5e9(bytes32)"(
-      c__0xf15ee5e9: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
     getOffer(
       seller: string,
       id: BigNumberish,
@@ -955,6 +1041,34 @@ export class Soveren extends Contract {
       amount: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
+
+    getRating(id: BigNumberish, overrides?: CallOverrides): Promise<number>;
+
+    "getRating(uint256)"(
+      id: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<number>;
+
+    getVotes(
+      id: BigNumberish,
+      skip: BigNumberish,
+      count: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<{ comment: string; rating: number; 0: string; 1: number }[]>;
+
+    "getVotes(uint256,uint32,uint32)"(
+      id: BigNumberish,
+      skip: BigNumberish,
+      count: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<{ comment: string; rating: number; 0: string; 1: number }[]>;
+
+    getVotesCount(id: BigNumberish, overrides?: CallOverrides): Promise<number>;
+
+    "getVotesCount(uint256)"(
+      id: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<number>;
 
     isApprovedForAll(
       account: string,
@@ -1104,6 +1218,20 @@ export class Soveren extends Contract {
       overrides?: CallOverrides
     ): Promise<string>;
 
+    vote(
+      id: BigNumberish,
+      rating: BigNumberish,
+      comment: string,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    "vote(uint256,uint8,string)"(
+      id: BigNumberish,
+      rating: BigNumberish,
+      comment: string,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
     withdrawPayments(payee: string, overrides?: CallOverrides): Promise<void>;
 
     "withdrawPayments(address)"(
@@ -1198,16 +1326,6 @@ export class Soveren extends Contract {
       overrides?: PayableOverrides
     ): Promise<BigNumber>;
 
-    c_0xf15ee5e9(
-      c__0xf15ee5e9: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    "c_0xf15ee5e9(bytes32)"(
-      c__0xf15ee5e9: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
     getOffer(
       seller: string,
       id: BigNumberish,
@@ -1243,6 +1361,37 @@ export class Soveren extends Contract {
       seller: string,
       id: BigNumberish,
       amount: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    getRating(id: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
+
+    "getRating(uint256)"(
+      id: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    getVotes(
+      id: BigNumberish,
+      skip: BigNumberish,
+      count: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    "getVotes(uint256,uint32,uint32)"(
+      id: BigNumberish,
+      skip: BigNumberish,
+      count: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    getVotesCount(
+      id: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    "getVotesCount(uint256)"(
+      id: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
@@ -1394,6 +1543,20 @@ export class Soveren extends Contract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
+    vote(
+      id: BigNumberish,
+      rating: BigNumberish,
+      comment: string,
+      overrides?: Overrides
+    ): Promise<BigNumber>;
+
+    "vote(uint256,uint8,string)"(
+      id: BigNumberish,
+      rating: BigNumberish,
+      comment: string,
+      overrides?: Overrides
+    ): Promise<BigNumber>;
+
     withdrawPayments(payee: string, overrides?: Overrides): Promise<BigNumber>;
 
     "withdrawPayments(address)"(
@@ -1455,16 +1618,6 @@ export class Soveren extends Contract {
       overrides?: PayableOverrides
     ): Promise<PopulatedTransaction>;
 
-    c_0xf15ee5e9(
-      c__0xf15ee5e9: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    "c_0xf15ee5e9(bytes32)"(
-      c__0xf15ee5e9: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
     getOffer(
       seller: string,
       id: BigNumberish,
@@ -1500,6 +1653,40 @@ export class Soveren extends Contract {
       seller: string,
       id: BigNumberish,
       amount: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    getRating(
+      id: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    "getRating(uint256)"(
+      id: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    getVotes(
+      id: BigNumberish,
+      skip: BigNumberish,
+      count: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    "getVotes(uint256,uint32,uint32)"(
+      id: BigNumberish,
+      skip: BigNumberish,
+      count: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    getVotesCount(
+      id: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    "getVotesCount(uint256)"(
+      id: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
@@ -1661,6 +1848,20 @@ export class Soveren extends Contract {
     "uri(uint256)"(
       id: BigNumberish,
       overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    vote(
+      id: BigNumberish,
+      rating: BigNumberish,
+      comment: string,
+      overrides?: Overrides
+    ): Promise<PopulatedTransaction>;
+
+    "vote(uint256,uint8,string)"(
+      id: BigNumberish,
+      rating: BigNumberish,
+      comment: string,
+      overrides?: Overrides
     ): Promise<PopulatedTransaction>;
 
     withdrawPayments(
