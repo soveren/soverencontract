@@ -340,29 +340,81 @@ describe("Buy", function() {
 
 })
 
-describe.only("Rating", function() {
-    const comment = 'comment'
+describe("Rating", function() {
 
-    it("Should not vote (wrong token)", async function () {
-    await expect(soveren.connect(sig2).vote(7, 1, comment))
-        .to.be.revertedWith('SOVEREN: Token not found')
-    })
+  it("Should not vote (wrong token)", async function () {
+    await expect(soveren.connect(sig2).vote(7, 1, 'comment'))
+      .to.be.revertedWith('SOVEREN: Token not found')
+  })
 
-    it("Should not vote (rating 0)", async function () {
-    await expect(soveren.connect(sig2).vote(7, 0, comment))
-        .to.be.revertedWith('SOVEREN: rating must not be 0')
-    })
+  it("Should not vote (rating 0)", async function () {
+    await expect(soveren.connect(sig2).vote(7, 0, 'comment'))
+      .to.be.revertedWith('SOVEREN: rating must not be 0')
+  })
 
-    it("Should not vote (comment loo long)", async function () {
-    await expect(soveren.connect(sig2).vote(7, 1, comment.repeat(100)))
-        .to.be.revertedWith('SOVEREN: comment length must not more 140 bytes')
-    })
+  it("Should not vote (comment loo long)", async function () {
+    await expect(soveren.connect(sig2).vote(7, 1, 'comment'.repeat(100)))
+      .to.be.revertedWith('SOVEREN: comment length must not exceed 140 bytes')
+  })
 
-    it("Should vote ", async function () {
-        await soveren.mint(7,1000, uri1, private1, true)
-        await expect(soveren.connect(sig2).vote(7, 50, comment))
-            .to.be.revertedWith('SOVEREN: Token not found')
-    })
+  it("Should getRating 0", async function () {
+    await soveren.connect(sig1).mint(7,1000, uri1, private1, true)
+    expect( await soveren.getRating(7))
+      .to.equal(0)
+  })
+
+  it("Should getVotesCount 0", async function () {
+    expect( await soveren.getVotesCount(7))
+      .to.equal(0)
+  })
+
+  it("Should vote ", async function () {
+    await soveren.connect(sig1).vote(7, 50, 'comment')
+    expect( await soveren.connect(sig1).getVote(7))
+      .to.be.deep.equal([50, 'comment'])
+  })
+
+  it("Should getVotesCount 1", async function () {
+    expect( await soveren.getVotesCount(7))
+        .to.equal(1)
+  })
+
+  it("Should getRating 50", async function () {
+    expect( await soveren.getRating(7))
+        .to.equal(50)
+  })
+
+  it("Should vote again", async function () {
+    await soveren.connect(sig1).vote(7, 100, 'comment 2')
+    expect( await soveren.connect(sig1).getVote(7))
+      .to.be.deep.equal([100, 'comment 2'])
+  })
+
+  it("Should getVotesCount 1", async function () {
+    expect( await soveren.getVotesCount(7))
+        .to.equal(1)
+  })
+
+  it("Should getRating 100", async function () {
+    expect( await soveren.getRating(7))
+        .to.equal(100)
+  })
+
+  it("Should vote sig2", async function () {
+    await soveren.connect(sig2).vote(7, 200, 'comment sig 2')
+    expect( await soveren.connect(sig2).getVote(7))
+        .to.be.deep.equal([200, 'comment sig 2'])
+  })
+
+  it("Should getVotesCount 2", async function () {
+    expect( await soveren.getVotesCount(7))
+        .to.equal(2)
+  })
+
+  it("Should getRating 100", async function () {
+    expect( await soveren.getRating(7))
+        .to.equal(150)
+  })
 
 
   // it("Should create offer", async function () {

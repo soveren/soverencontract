@@ -13,8 +13,8 @@ contract Soveren is ERC1155, PullPayment, ReentrancyGuard {
     using SafeMath for uint32;
 
     struct Vote {
-        string comment;
         uint8 rating;
+        string comment;
     }
 
     struct Product {
@@ -60,7 +60,7 @@ contract Soveren is ERC1155, PullPayment, ReentrancyGuard {
     }
 
     function vote(uint256 id, uint8 rating, string memory comment) external virtual {
-        require( bytes(comment).length<=140, "SOVEREN: comment length must not more 140 bytes");
+        require( bytes(comment).length<=140, "SOVEREN: comment length must not exceed 140 bytes");
         require(rating>0, "SOVEREN: rating must not be 0");
 
         Product storage product = _products[id];
@@ -70,15 +70,21 @@ contract Soveren is ERC1155, PullPayment, ReentrancyGuard {
         bool ratedBefore = vote.rating > 0;
 
         if (ratedBefore)
-            product.accumulatedRating.sub(vote.rating); // decrease old value first
+            product.accumulatedRating = product.accumulatedRating.sub(vote.rating); // decrease old value first
         else {
             product.votesIndex[product.votesCount] = msg.sender;
-            product.votesCount.add(1);
+            product.votesCount += 1;
+            require(product.votesCount>0, "SOVEREN: max votes reached");
         }
 
         vote.rating = rating;
         vote.comment = comment;
-        product.accumulatedRating.add(rating);
+        product.accumulatedRating = product.accumulatedRating.add(rating);
+    }
+
+    function getVote(uint256 id) public view virtual returns (Vote memory) {
+        Product storage product = _products[id];
+        return product.votes[msg.sender];
     }
 
     function getRating(uint256 id) public view virtual returns (uint8) {
