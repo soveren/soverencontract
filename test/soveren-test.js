@@ -86,7 +86,6 @@ describe("Mint & Burn", function() {
         .to.be.revertedWith('SOVEREN: mintMore disabled')
   });
 
-
   it("Should burn", async function() {
     await soveren.connect(sig2).burn(2, 500)
     expect(await soveren.balanceOf(adr2, 2)).to.equal(0);
@@ -297,7 +296,6 @@ describe("Buy", function() {
     expect(await soveren.payments(adrOwner)).to.equal(0);
   })
 
-
   it("Should not transfer (only owner can transfer)", async function () {
     await expect( soveren.connect(sig3)
         .safeTransferFrom(adr2, adr3, 4, 1, 0x0 ))
@@ -337,7 +335,6 @@ describe("Buy", function() {
     expect(await soveren.balanceOf(adr3, 5)-bal3_5).to.equal(+50);
     expect(await soveren.balanceOf(adr3, 6)-bal3_6).to.equal(+6);
   })
-
 })
 
 describe("Rating", function() {
@@ -368,6 +365,11 @@ describe("Rating", function() {
       .to.equal(0)
   })
 
+  it("Should get empty votes", async function () {
+    expect( await soveren.getVotes(7, 0, 100))
+        .to.be.deep.equal([])
+  })
+
   it("Should vote ", async function () {
     await soveren.connect(sig1).vote(7, 50, 'comment')
     expect( await soveren.connect(sig1).getVote(7))
@@ -384,6 +386,11 @@ describe("Rating", function() {
         .to.equal(50)
   })
 
+  it("Should get votes", async function () {
+    expect( await soveren.getVotes(7, 0, 100))
+        .to.be.deep.equal([[50,'comment']])
+  })
+
   it("Should vote again", async function () {
     await soveren.connect(sig1).vote(7, 100, 'comment 2')
     expect( await soveren.connect(sig1).getVote(7))
@@ -395,10 +402,21 @@ describe("Rating", function() {
         .to.equal(1)
   })
 
+  it("Should get votes", async function () {
+    expect( await soveren.getVotes(7, 0, 100))
+        .to.be.deep.equal([[100,'comment 2']])
+  })
+
   it("Should getRating 100", async function () {
     expect( await soveren.getRating(7))
         .to.equal(100)
   })
+
+  it("Should not get votes", async function () {
+    await expect( soveren.getVotes(7, 0, 1000))
+        .to.be.revertedWith('SOVEREN: count must be not more 100')
+  })
+
 
   it("Should vote sig2", async function () {
     await soveren.connect(sig2).vote(7, 200, 'comment sig 2')
@@ -416,14 +434,19 @@ describe("Rating", function() {
         .to.equal(150)
   })
 
+  it("Should get votes", async function () {
+    expect( await soveren.getVotes(7, 0, 100))
+        .to.be.deep.equal([ [200,'comment sig 2'], [100,'comment 2'] ])
+  })
 
-  // it("Should create offer", async function () {
-  //   await soveren.connect(sig1).mint(4, 500, uri1, private1, true)
-  //   expect(await soveren.balanceOf(adr1, 4)).to.equal(500);
-  //   await soveren.connect(sig1).makeOffer(4, 100, 400, [1, 2, 3, 4, 5], 20, 5)
-  //   expect(await soveren.getOffer(adr1, 4)).to.deep.equal(
-  //       // 20% - affiliate interest, 5% donation
-  //       [BN(100), BN(400), [1, 2, 3, 4, 5], 20, 5]
-  //   )
-  // })
+  it("Should get votes", async function () {
+    expect( await soveren.getVotes(7, 0, 1))
+        .to.be.deep.equal([ [200,'comment sig 2'] ])
+  })
+
+  it("Should get votes", async function () {
+    expect( await soveren.getVotes(7, 1, 1))
+        .to.be.deep.equal([ [100,'comment 2'], ])
+  })
+
 })

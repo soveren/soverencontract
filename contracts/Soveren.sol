@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import "@openzeppelin/contracts/payment/PullPayment.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/math/Math.sol";
 //import "hardhat/console.sol";
 
 contract Soveren is ERC1155, PullPayment, ReentrancyGuard {
@@ -55,7 +56,7 @@ contract Soveren is ERC1155, PullPayment, ReentrancyGuard {
 
     constructor() ERC1155("") {
         addressForDonations = msg.sender;
-        // register the supported interfaces to conform to ERC1155 via ERC165
+        // register the supported interfaces to conform to SOVEREN via ERC165
         _registerInterface(_INTERFACE_ID_SOVEREN);
     }
 
@@ -104,11 +105,19 @@ contract Soveren is ERC1155, PullPayment, ReentrancyGuard {
         require(count<=100, "SOVEREN: count must be not more 100");
 
         Product storage product = _products[id];
-        Vote[] memory votes = new Vote[](count);
+        uint itemsCount;
+        if (product.votesCount<=skip) itemsCount = 0;
+        else itemsCount = Math.min(count, product.votesCount-skip);
 
-        for (uint32 i=1; i<=count; i++ ) {
-            address voter = product.votesIndex[product.votesCount-i];
-            votes[i] = product.votes[ voter ];
+        Vote[] memory votes = new Vote[](itemsCount);
+
+        if (itemsCount==0) return votes;
+
+        uint32 offset = uint32(product.votesCount.sub(skip).sub(1));
+        for (uint32 i=0; i<itemsCount; i++ ) {
+            address voter = product.votesIndex[offset-i];
+            Vote memory vote = product.votes[ voter ];
+            votes[i] = vote;
         }
 
         return votes;
