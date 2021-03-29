@@ -4,10 +4,11 @@ require("hardhat-typechain");
 const BN = ethers.BigNumber.from;
 
 
-let soveren, sigOwner, adrOwner, sigContract, adrContract,
+let soveren, sigOwner, adrOwner, adrContract,
     sig1, sig2, sig3,
     adr1, adr2, adr3;
 
+// noinspection JSUnresolvedVariable
 const AddressZero = ethers.constants.AddressZero
 const uri1 = 'uri1'
 const uri2 = 'uri2'
@@ -220,13 +221,15 @@ describe("Buy", function() {
     expect(await soveren.balanceOf(adr1, 4)).to.equal(499);
     expect(await soveren.balanceOf(adr2, 4)).to.equal(1);
     // affiliate profit 20% = 20, donation 5% from 80 = 4, seller profit = (100-(80+4)) = 76
+    // expect(await ethers.provider.getBalance(soveren.address)).to.equal(100);
+    // expect(await ethers.provider.getBalance(adr2)).to.equal(100);
     expect(await soveren.payments(adr1)).to.equal(76);
     expect(await soveren.payments(adr3)).to.equal(20);
     expect(await soveren.payments(adrOwner)).to.equal(4);
   })
 
   it("Should get privateUri", async function () {
-    expect( await soveren.connect(sig2).privateUri(4)).to.equal("private1");
+      expect( await soveren.connect(sig2).privateUri(4)).to.equal("private1");
   })
 
   it("Should buy 1 w/o affiliate", async function () {
@@ -337,12 +340,31 @@ describe("Buy", function() {
 
 })
 
-describe("Rating", function() {
-  // it("Should not rate", async function () {
-  //   await expect(soveren.connect(sig2).buy(adr1, 4, 1, AddressZero, {value: 100}))
-  //       .to.be.revertedWith('SOVEREN: Token is not offered')
-  // })
-  //
+describe.only("Rating", function() {
+    const comment = 'comment'
+
+    it("Should not vote (wrong token)", async function () {
+    await expect(soveren.connect(sig2).vote(7, 1, comment))
+        .to.be.revertedWith('SOVEREN: Token not found')
+    })
+
+    it("Should not vote (rating 0)", async function () {
+    await expect(soveren.connect(sig2).vote(7, 0, comment))
+        .to.be.revertedWith('SOVEREN: rating must not be 0')
+    })
+
+    it("Should not vote (comment loo long)", async function () {
+    await expect(soveren.connect(sig2).vote(7, 1, comment.repeat(100)))
+        .to.be.revertedWith('SOVEREN: comment length must not more 140 bytes')
+    })
+
+    it("Should vote ", async function () {
+        await soveren.mint(7,1000, uri1, private1, true)
+        await expect(soveren.connect(sig2).vote(7, 50, comment))
+            .to.be.revertedWith('SOVEREN: Token not found')
+    })
+
+
   // it("Should create offer", async function () {
   //   await soveren.connect(sig1).mint(4, 500, uri1, private1, true)
   //   expect(await soveren.balanceOf(adr1, 4)).to.equal(500);
