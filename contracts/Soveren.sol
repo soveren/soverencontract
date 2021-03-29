@@ -215,7 +215,6 @@ contract Soveren is ERC1155, PullPayment, ReentrancyGuard {
         emit buySingle(seller, id, amount, affiliate);
     }
 
-
     function uri(uint256 id) external view virtual override returns (string memory) {
         return _products[id].uri;
     }
@@ -245,7 +244,6 @@ contract Soveren is ERC1155, PullPayment, ReentrancyGuard {
 
         _mint(msg.sender, id, amount, msg.data);
     }
-
 
     function burn(uint256 id, uint256 amount) external virtual nonReentrant {
         _burn(msg.sender, id, amount);
@@ -283,7 +281,5 @@ contract Soveren is ERC1155, PullPayment, ReentrancyGuard {
     {
         safeBatchTransferFrom(msg.sender, to, ids, amounts, msg.data);
     }
-
-
 
 }
