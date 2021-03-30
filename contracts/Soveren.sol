@@ -11,8 +11,8 @@ import "@openzeppelin/contracts/math/Math.sol";
 
 /// @title Contract for free and sovereign market
 /// @author Slavik V Bogdanov
-/// @notice This contract utilized at the soverenjs library and Soveren Vue app.
-/// @dev `solidity-docgen` comment tag @param do not work for some reason for now, so @notice used for now.
+/// @dev This contract utilized at the soverenjs library and Soveren Vue app.
+/// @dev `solidity-docgen` comment tag @param do not work for some reason for now, so @dev used for now.
 contract Soveren is ERC1155, PullPayment, ReentrancyGuard {
     using SafeMath for uint256;
     using SafeMath for uint32;
@@ -66,7 +66,7 @@ contract Soveren is ERC1155, PullPayment, ReentrancyGuard {
 
     // MINTING, BURNING, TRANSFER
 
-    /// @notice Creates `amount` tokens of new token type `id`, and assigns them to sender.
+    /// @dev Creates `amount` tokens of new token type `id`, and assigns them to sender.
     /// @param id Token id
     /// @param amount how many pieces to mint
     /// @param uri_ metadata uri https://eips.ethereum.org/EIPS/eip-1155#metadata
@@ -86,12 +86,12 @@ contract Soveren is ERC1155, PullPayment, ReentrancyGuard {
         _mint(creator, id, amount, msg.data);
     }
 
-    /// @notice Returns `creator` address for token `id`
+    /// @dev Returns `creator` address for token `id`
     function getCreator(uint256 id) external view virtual returns (address payable){
         return _products[id].creator;
     }
 
-    /// @notice Creates `amount` tokens of existing token type `id`, and assigns them to sender
+    /// @dev Creates `amount` tokens of existing token type `id`, and assigns them to sender
     function mintMore(uint256 id, uint256 amount) external virtual nonReentrant {
         require( _products[id].creator == msg.sender, "SVRN: Mint more can token creator only");
         require( _products[id].canMintMore, "SVRN: mintMore disabled");
@@ -99,7 +99,7 @@ contract Soveren is ERC1155, PullPayment, ReentrancyGuard {
         _mint(msg.sender, id, amount, msg.data);
     }
 
-    /// @notice Burns `amount` tokens of token type `id`
+    /// @dev Burns `amount` tokens of token type `id`
     function burn(uint256 id, uint256 amount) external virtual nonReentrant {
         _burn(msg.sender, id, amount);
     }
@@ -111,7 +111,7 @@ contract Soveren is ERC1155, PullPayment, ReentrancyGuard {
         super.safeTransferFrom( from, to, id, amount, data);
     }
 
-    /// @notice Transfers `to` address `amount` tokens of token type `id`
+    /// @dev Transfers `to` address `amount` tokens of token type `id`
     function transfer( address to, uint256 id, uint256 amount) public virtual
     {
         safeTransferFrom( msg.sender, to, id, amount, msg.data);
@@ -124,7 +124,7 @@ contract Soveren is ERC1155, PullPayment, ReentrancyGuard {
         super.safeBatchTransferFrom(from, to, ids, amounts, data);
     }
 
-    /// @notice Transfers `to` address `amounts` tokens of token types `ids`
+    /// @dev Transfers `to` address `amounts` tokens of token types `ids`
     function batchTransfer( address to, uint256[] memory ids, uint256[] memory amounts)
     public virtual
     {
@@ -133,12 +133,12 @@ contract Soveren is ERC1155, PullPayment, ReentrancyGuard {
 
     // OFFERS, BUYING
 
-    /// @notice Creates sale offer of token type `id`.
-    /// @notice `price` price for 1 token in wei.
-    /// @notice `reserve` Reserves tokens (do not offers it for sale).
-    /// @notice `bulkDiscounts` You can specify bulk discounts at this array for 10+, 100+, 1000+ etc pieces. For example if you set `bulkDiscounts` to `[5,10,20,50]`, then it means what you give 5% discount for 10 and more pieces, 10% for 100+, 20% for 1000+, and 50% discount for 10000 pieces and more.
-    /// @notice `affiliateInterest` How many percents from purchase will earn your affiliate. An affiliate program is a great way to motivate other people to promote your tokens.
-    /// @notice `donation` How namy percents from clear profit you want to automatically donate to support the service.
+    /// @dev Creates sale offer of token type `id`.
+    /// @dev `price` price for 1 token in wei.
+    /// @dev `reserve` Reserves tokens (do not offers it for sale).
+    /// @dev `bulkDiscounts` You can specify bulk discounts at this array for 10+, 100+, 1000+ etc pieces. For example if you set `bulkDiscounts` to `[5,10,20,50]`, then it means what you give 5% discount for 10 and more pieces, 10% for 100+, 20% for 1000+, and 50% discount for 10000 pieces and more.
+    /// @dev `affiliateInterest` How many percents from purchase will earn your affiliate. An affiliate program is a great way to motivate other people to promote your tokens.
+    /// @dev `donation` How namy percents from clear profit you want to automatically donate to support the service.
     function makeOffer(uint256 id, uint256 price, uint256 reserve, uint8[] memory bulkDiscounts, uint8 affiliateInterest, uint8 donation ) external virtual {
         require( balanceOf(msg.sender, id)>0, _DO_NOT_HAVE_SUCH_TOKEN);
         require( affiliateInterest<100, _PERCENTS_MUST_BE_LESS_100);
@@ -158,12 +158,12 @@ contract Soveren is ERC1155, PullPayment, ReentrancyGuard {
         });
     }
 
-    /// @notice Removes sale offer of token type `id`
+    /// @dev Removes sale offer of token type `id`
     function removeOffer(uint256 id) external virtual {
         delete _offers[id][msg.sender];
     }
 
-    /// @notice Returns `seller`s sale offer of token type `id`
+    /// @dev Returns `seller`s sale offer of token type `id`
     function getOffer(address payable seller, uint256 id) external view virtual returns (Offer memory){
         return _offers[id][seller];
     }
@@ -173,7 +173,7 @@ contract Soveren is ERC1155, PullPayment, ReentrancyGuard {
         return true; // for now we approve transfers from all accounts for buy method below
     }
 
-    /// @notice Returns `seller`s offered amount of token type `id`
+    /// @dev Returns `seller`s offered amount of token type `id`
     function getOfferedAmount(address payable seller, uint256 id) public view virtual returns (uint256){
         uint256 balance = balanceOf(seller, id);
         uint256 reserve = _offers[id][seller].reserve;
@@ -181,7 +181,7 @@ contract Soveren is ERC1155, PullPayment, ReentrancyGuard {
         else return 0;
     }
 
-    /// @notice Returns total `seller` price in wei for specified `amount` of token type `id` (`bulkDiscounts` applied)
+    /// @dev Returns total `seller` price in wei for specified `amount` of token type `id` (`bulkDiscounts` applied)
     function getPriceForAmount(address payable seller, uint256 id, uint256 amount) public view virtual returns (uint256) {
         Offer memory offer = _offers[id][seller];
         uint256 basePrice = offer.price;
@@ -202,11 +202,11 @@ contract Soveren is ERC1155, PullPayment, ReentrancyGuard {
         return totalPrice;
     }
 
-    /// @notice Process purchase from `seller` of token type `id`.
-    /// @notice You must send `getPriceForAmount` ethers in transaction.
-    /// @notice Amount must be not more than `getOfferedAmount`.
-    /// @notice `affiliate` will earn `affiliateInterest` percents from value
-    /// @notice `seller` also automatically donate `donation` percents from profit (value-affiliate interest)
+    /// @dev Process purchase from `seller` of token type `id`.
+    /// @dev You must send `getPriceForAmount` ethers in transaction.
+    /// @dev Amount must be not more than `getOfferedAmount`.
+    /// @dev `affiliate` will earn `affiliateInterest` percents from value
+    /// @dev `seller` also automatically donate `donation` percents from profit (value-affiliate interest)
     function buy(address payable seller, uint256 id, uint256 amount, address payable affiliate)
     external payable virtual nonReentrant {
         Offer storage offer = _offers[id][seller];
@@ -238,12 +238,12 @@ contract Soveren is ERC1155, PullPayment, ReentrancyGuard {
         emit buySingle(seller, id, amount, affiliate);
     }
 
-    /// @notice Returns metadata uri for token type `id`.
+    /// @dev Returns metadata uri for token type `id`.
     function uri(uint256 id) external view virtual override returns (string memory) {
         return _products[id].uri;
     }
 
-    /// @notice Returns `privateUri` for token type `id`. Sender must own token of this type.
+    /// @dev Returns `privateUri` for token type `id`. Sender must own token of this type.
     function privateUri(uint256 id) external view virtual returns (string memory) {
         require(balanceOf(msg.sender, id)>0, "SVRN: You do not have such token");
         return _products[id].privateUri;
@@ -251,9 +251,9 @@ contract Soveren is ERC1155, PullPayment, ReentrancyGuard {
 
     // VOTING
 
-    /// @notice Place vote for token with `id`. When you call it again for same `id` then only last `rating` used to calculate average rating.
-    /// @notice `rating` 1-255.
-    /// @notice comment your comment about token (product). 140 bytes max.
+    /// @dev Place vote for token with `id`. When you call it again for same `id` then only last `rating` used to calculate average rating.
+    /// @dev `rating` 1-255.
+    /// @dev comment your comment about token (product). 140 bytes max.
     function vote(uint256 id, uint8 rating, string memory comment) external virtual {
         require( bytes(comment).length<=140, "SVRN: comment length must not exceed 140 bytes");
         require(rating>0, "SVRN: rating must not be 0");
@@ -277,26 +277,26 @@ contract Soveren is ERC1155, PullPayment, ReentrancyGuard {
         product.accumulatedRating = product.accumulatedRating.add(rating);
     }
 
-    /// @notice Returns your previous vote for token `id`.
+    /// @dev Returns your previous vote for token `id`.
     function getVote(uint256 id) public view virtual returns (Vote memory) {
         Product storage product = _products[id];
         return product.votes[msg.sender];
     }
 
-    /// @notice Returns average rating (accumulated rating divided by votes count) for token `id`
+    /// @dev Returns average rating (accumulated rating divided by votes count) for token `id`
     function getRating(uint256 id) public view virtual returns (uint8) {
         Product storage product = _products[id];
         if (product.votesCount==0) return 0;
         else return uint8(product.accumulatedRating.div(product.votesCount));
     }
 
-    /// @notice Returns total votes count for token `id`
+    /// @dev Returns total votes count for token `id`
     function getVotesCount(uint256 id) public view virtual returns (uint32) {
         return _products[id].votesCount;
     }
 
-    /// @notice Returns last `count` votes, skipping `skip` items for token `id`
-    /// @notice Useful for getting comments / stars feed
+    /// @dev Returns last `count` votes, skipping `skip` items for token `id`
+    /// @dev Useful for getting comments / stars feed
     function getVotes(uint256 id, uint32 skip, uint32 count) public view virtual returns (Vote[] memory) {
         require(count<=100, "SVRN: count exceeds 100");
 
