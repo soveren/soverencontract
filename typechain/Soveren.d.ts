@@ -28,6 +28,7 @@ interface SoverenInterface extends ethers.utils.Interface {
     "batchTransfer(address,uint256[],uint256[])": FunctionFragment;
     "burn(uint256,uint256)": FunctionFragment;
     "buy(address,uint256,uint256,address)": FunctionFragment;
+    "getCreator(uint256)": FunctionFragment;
     "getOffer(address,uint256)": FunctionFragment;
     "getOfferedAmount(address,uint256)": FunctionFragment;
     "getPriceForAmount(address,uint256,uint256)": FunctionFragment;
@@ -71,6 +72,10 @@ interface SoverenInterface extends ethers.utils.Interface {
   encodeFunctionData(
     functionFragment: "buy",
     values: [string, BigNumberish, BigNumberish, string]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getCreator",
+    values: [BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "getOffer",
@@ -173,6 +178,7 @@ interface SoverenInterface extends ethers.utils.Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "burn", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "buy", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "getCreator", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "getOffer", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "getOfferedAmount",
@@ -328,6 +334,20 @@ export class Soveren extends Contract {
       affiliate: string,
       overrides?: PayableOverrides
     ): Promise<ContractTransaction>;
+
+    getCreator(
+      id: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<{
+      0: string;
+    }>;
+
+    "getCreator(uint256)"(
+      id: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<{
+      0: string;
+    }>;
 
     getOffer(
       seller: string,
@@ -746,6 +766,13 @@ export class Soveren extends Contract {
     overrides?: PayableOverrides
   ): Promise<ContractTransaction>;
 
+  getCreator(id: BigNumberish, overrides?: CallOverrides): Promise<string>;
+
+  "getCreator(uint256)"(
+    id: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<string>;
+
   getOffer(
     seller: string,
     id: BigNumberish,
@@ -1096,6 +1123,13 @@ export class Soveren extends Contract {
       affiliate: string,
       overrides?: CallOverrides
     ): Promise<void>;
+
+    getCreator(id: BigNumberish, overrides?: CallOverrides): Promise<string>;
+
+    "getCreator(uint256)"(
+      id: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<string>;
 
     getOffer(
       seller: string,
@@ -1479,6 +1513,13 @@ export class Soveren extends Contract {
       overrides?: PayableOverrides
     ): Promise<BigNumber>;
 
+    getCreator(id: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
+
+    "getCreator(uint256)"(
+      id: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     getOffer(
       seller: string,
       id: BigNumberish,
@@ -1804,6 +1845,16 @@ export class Soveren extends Contract {
       amount: BigNumberish,
       affiliate: string,
       overrides?: PayableOverrides
+    ): Promise<PopulatedTransaction>;
+
+    getCreator(
+      id: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    "getCreator(uint256)"(
+      id: BigNumberish,
+      overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
     getOffer(

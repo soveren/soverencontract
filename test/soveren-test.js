@@ -42,6 +42,10 @@ describe("Mint & Burn", function() {
     expect(await soveren.balanceOf(adr1, 1)).to.equal(1000);
   });
 
+  it("Should return creator", async function() {
+    expect(await soveren.getCreator(1)).to.equal(adr1);
+  });
+
   it("Product should have specified uri", async function() {
     expect(await soveren.uri(1)).to.equal(uri1);
   });
@@ -53,12 +57,12 @@ describe("Mint & Burn", function() {
 
   it("Should not mint from another address", async function() {
     await expect(soveren.connect(sig2).mint(1, 100, uri1, private1, true))
-        .to.be.revertedWith('SOVEREN: Token already exists')
+        .to.be.revertedWith('SVRN: Token already exists')
   });
 
   it("Should not mint more from another address", async function() {
     await expect(soveren.connect(sig2).mintMore(1, 100))
-        .to.be.revertedWith('SOVEREN: Mint more can token creator only')
+        .to.be.revertedWith('SVRN: Mint more can token creator only')
   });
 
   it("Should not burn exceed", async function() {
@@ -83,7 +87,7 @@ describe("Mint & Burn", function() {
 
   it("Should not mint more", async function() {
     await expect(  soveren.connect(sig2).mintMore(2, 100))
-        .to.be.revertedWith('SOVEREN: mintMore disabled')
+        .to.be.revertedWith('SVRN: mintMore disabled')
   });
 
   it("Should burn", async function() {
@@ -97,7 +101,7 @@ describe("Offers", function() {
 
   it("Should not create offer", async function() {
     await expect(  soveren.connect(sig1).makeOffer(3, 1000, 0,[], 20, 5 ))
-        .to.be.revertedWith('SOVEREN: You do not have such token')
+        .to.be.revertedWith('SVRN: You do not have such token')
   });
 
   it("Should create offer", async function() {
@@ -115,22 +119,22 @@ describe("Offers", function() {
 
   it("Should not create offer (affiliateInterest too high)", async function() {
     await expect(  soveren.connect(sig1).makeOffer(3, 1000, 0,[], 100, 5 ))
-        .to.be.revertedWith('SOVEREN: Percents must be less 100')
+        .to.be.revertedWith('SVRN: Percents must be less 100')
   });
 
   it("Should not create offer (donation too high)", async function() {
     await expect(  soveren.connect(sig1).makeOffer(3, 1000, 0, [], 10, 100 ))
-        .to.be.revertedWith('SOVEREN: Percents must be less 100')
+        .to.be.revertedWith('SVRN: Percents must be less 100')
   });
 
   it("Should not create offer (wrong discounts order)", async function() {
     await expect(  soveren.connect(sig1).makeOffer(3, 1000, 0, [1,2,3,4,1,5], 10, 1 ))
-        .to.be.revertedWith('SOVEREN: Each next discount must be higher')
+        .to.be.revertedWith('SVRN: Each next discount must be higher')
   });
 
   it("Should not create offer (discount too high)", async function() {
     await expect(  soveren.connect(sig1).makeOffer(3, 1000, 0,[1,2,3,4,100,5], 10, 1 ))
-        .to.be.revertedWith('SOVEREN: Percents must be less 100')
+        .to.be.revertedWith('SVRN: Percents must be less 100')
   });
 
   it("Should remove offer", async function() {
@@ -149,7 +153,7 @@ describe("Offers", function() {
 
   it("Should not getPriceForAmount", async function() {
     await expect( soveren.getPriceForAmount(adr1, 99999, 1))
-      .to.be.revertedWith('SOVEREN: Token is not offered')
+      .to.be.revertedWith('SVRN: Token is not offered')
   });
 
   it("Should getPriceForAmount", async function() {
@@ -181,7 +185,7 @@ describe("Offers", function() {
 describe("Buy", function() {
   it("Should not buy not offered token", async function () {
     await expect(  soveren.connect(sig2).buy(adr1, 4, 1, AddressZero, {value:100}))
-        .to.be.revertedWith('SOVEREN: Token is not offered')
+        .to.be.revertedWith('SVRN: Token is not offered')
   })
 
   it("Should create offer", async function () {
@@ -196,22 +200,22 @@ describe("Buy", function() {
 
   it("Should not get privateUri", async function () {
     await expect(  soveren.connect(sig2).privateUri(4))
-        .to.be.revertedWith('SOVEREN: You do not have such token')
+        .to.be.revertedWith('SVRN: You do not have such token')
   })
 
   it("Should not buy (wrong value)", async function () {
     await expect(  soveren.connect(sig2).buy(adr1, 4, 1, adr3, {value:1}))
-        .to.be.revertedWith('SOVEREN: value is not equal to amount price')
+        .to.be.revertedWith('SVRN: value is not equal to amount price')
   })
 
   it("Should not buy (amount exceeds supply)", async function () {
     await expect(  soveren.connect(sig2).buy(adr1, 4, 999999, adr3, {value:1}))
-        .to.be.revertedWith('SOVEREN: amount exceeds supply')
+        .to.be.revertedWith('SVRN: amount exceeds supply')
   })
 
   it("Should not buy (amount exceeds amount offered)", async function () {
     await expect(  soveren.connect(sig2).buy(adr1, 4, 101, adr3, {value:1}))
-        .to.be.revertedWith('SOVEREN: amount exceeds supply')
+        .to.be.revertedWith('SVRN: amount exceeds supply')
   })
 
   it("Should buy 1 with affiliate", async function () {
@@ -299,13 +303,13 @@ describe("Buy", function() {
   it("Should not transfer (only owner can transfer)", async function () {
     await expect( soveren.connect(sig3)
         .safeTransferFrom(adr2, adr3, 4, 1, 0x0 ))
-        .to.be.revertedWith('SOVEREN: Only owner can transfer')
+        .to.be.revertedWith('SVRN: Only owner can transfer')
   })
 
   it("Should not batch transfer (only owner can transfer)", async function () {
     await expect( soveren.connect(sig3)
         .safeBatchTransferFrom(adr2, adr3, [4], [1], 0x0 ))
-        .to.be.revertedWith('SOVEREN: Only owner can transfer')
+        .to.be.revertedWith('SVRN: Only owner can transfer')
   })
 
   it("Should not transfer (insufficient balance)", async function () {
@@ -341,17 +345,17 @@ describe("Rating", function() {
 
   it("Should not vote (wrong token)", async function () {
     await expect(soveren.connect(sig2).vote(7, 1, 'comment'))
-      .to.be.revertedWith('SOVEREN: Token not found')
+      .to.be.revertedWith('SVRN: Token not found')
   })
 
   it("Should not vote (rating 0)", async function () {
     await expect(soveren.connect(sig2).vote(7, 0, 'comment'))
-      .to.be.revertedWith('SOVEREN: rating must not be 0')
+      .to.be.revertedWith('SVRN: rating must not be 0')
   })
 
   it("Should not vote (comment loo long)", async function () {
     await expect(soveren.connect(sig2).vote(7, 1, 'comment'.repeat(100)))
-      .to.be.revertedWith('SOVEREN: comment length must not exceed 140 bytes')
+      .to.be.revertedWith('SVRN: comment length must not exceed 140 bytes')
   })
 
   it("Should getRating 0", async function () {
@@ -414,9 +418,8 @@ describe("Rating", function() {
 
   it("Should not get votes", async function () {
     await expect( soveren.getVotes(7, 0, 1000))
-        .to.be.revertedWith('SOVEREN: count must be not more 100')
+        .to.be.revertedWith('SVRN: count exceeds 100')
   })
-
 
   it("Should vote sig2", async function () {
     await soveren.connect(sig2).vote(7, 200, 'comment sig 2')

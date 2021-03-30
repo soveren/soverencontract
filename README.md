@@ -1,5 +1,8 @@
 # Soveren Contract
 
+### Documentation
+Located at [docs/Soveren.md]()
+
 ### Inastall
 ```npm i```
 
@@ -10,3 +13,7 @@ Coverages: ```./coverage/index.html```
 
 ### Compile
 ```npx hardhat compile```
+
+###Generate docs
+```npx solidity-docgen --solc-module solc-0.7```
+

@@ -18,7 +18,9 @@
     "mocha": "^7.2.0",
     "npm": "^7.6.3",
     "nyc": "^15.1.0",
+    "solc-0.7": "npm:solc@^0.7.0",
     "solidity-coverage": "^0.7.16",
+    "solidity-docgen": "^0.5.11",
     "ts-generator": "^0.1.1",
     "typechain": "^4.0.3"
   }
