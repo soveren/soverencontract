@@ -3,7 +3,7 @@
 ### Documentation
 Located at [docs/Soveren.md]()
 
-### Inastall
+### Install
 ```npm i```
 
 ### Test

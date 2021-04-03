@@ -41,6 +41,17 @@ contract Soveren is ERC1155, PullPayment, ReentrancyGuard {
         uint8 donation;           // per product donation (percents, 0-99)
     }
 
+    struct Profile {
+        string uri;               // profile metadata uri
+        uint32 productsCount;
+        uint32 offersCount;
+        mapping (uint32 => uint256) productsIndex;
+        mapping (uint32 => uint256) offersIndex;
+    }
+
+    // Mapping to profiles
+    mapping (address => Profile) private _profiles;
+
     // Mapping to products
     mapping (uint256 => Product) private _products;
 
@@ -55,6 +66,7 @@ contract Soveren is ERC1155, PullPayment, ReentrancyGuard {
     string private constant _ONLY_OWNER_CAN_TRANSFER    = "SVRN: Only owner can transfer";
 
     event buySingle(address payable seller, uint256 id, uint256 amount, address payable affiliate);
+    event offer(uint256 id, uint256 price, uint256 reserve, uint8[] bulkDiscounts, uint8 affiliateInterest, uint8 donation);
 
     address payable addressForDonations;
 
@@ -92,12 +104,12 @@ contract Soveren is ERC1155, PullPayment, ReentrancyGuard {
     }
 
     /// @dev Creates `amount` tokens of existing token type `id`, and assigns them to sender
-    function mintMore(uint256 id, uint256 amount) external virtual nonReentrant {
-        require( _products[id].creator == msg.sender, "SVRN: Mint more can token creator only");
-        require( _products[id].canMintMore, "SVRN: mintMore disabled");
-
-        _mint(msg.sender, id, amount, msg.data);
-    }
+//    function mintMore(uint256 id, uint256 amount) external virtual nonReentrant {
+//        require( _products[id].creator == msg.sender, "SVRN: Mint more can token creator only");
+//        require( _products[id].canMintMore, "SVRN: mintMore disabled");
+//
+//        _mint(msg.sender, id, amount, msg.data);
+//    }
 
     /// @dev Burns `amount` tokens of token type `id`
     function burn(uint256 id, uint256 amount) external virtual nonReentrant {
@@ -111,11 +123,11 @@ contract Soveren is ERC1155, PullPayment, ReentrancyGuard {
         super.safeTransferFrom( from, to, id, amount, data);
     }
 
-    /// @dev Transfers `to` address `amount` tokens of token type `id`
-    function transfer( address to, uint256 id, uint256 amount) public virtual
-    {
-        safeTransferFrom( msg.sender, to, id, amount, msg.data);
-    }
+//    /// @dev Transfers `to` address `amount` tokens of token type `id`
+//    function transfer( address to, uint256 id, uint256 amount) public virtual
+//    {
+//        safeTransferFrom( msg.sender, to, id, amount, msg.data);
+//    }
 
     function safeBatchTransferFrom( address from, address to, uint256[] memory ids, uint256[] memory amounts, bytes memory data)
     public nonReentrant virtual override
@@ -124,21 +136,21 @@ contract Soveren is ERC1155, PullPayment, ReentrancyGuard {
         super.safeBatchTransferFrom(from, to, ids, amounts, data);
     }
 
-    /// @dev Transfers `to` address `amounts` tokens of token types `ids`
-    function batchTransfer( address to, uint256[] memory ids, uint256[] memory amounts)
-    public virtual
-    {
-        safeBatchTransferFrom(msg.sender, to, ids, amounts, msg.data);
-    }
+//    /// @dev Transfers `to` address `amounts` tokens of token types `ids`
+//    function batchTransfer( address to, uint256[] memory ids, uint256[] memory amounts)
+//    public virtual
+//    {
+//        safeBatchTransferFrom(msg.sender, to, ids, amounts, msg.data);
+//    }
 
     // OFFERS, BUYING
 
     /// @dev Creates sale offer of token type `id`.
-    /// @dev `price` price for 1 token in wei.
-    /// @dev `reserve` Reserves tokens (do not offers it for sale).
+    /// @dev `price` price for 1 token in wei. Set to 0 to 'remove' offer.
+    /// @dev `reserve` Amount of tokens to reserve (do not offer it for sale).
     /// @dev `bulkDiscounts` You can specify bulk discounts at this array for 10+, 100+, 1000+ etc pieces. For example if you set `bulkDiscounts` to `[5,10,20,50]`, then it means what you give 5% discount for 10 and more pieces, 10% for 100+, 20% for 1000+, and 50% discount for 10000 pieces and more.
     /// @dev `affiliateInterest` How many percents from purchase will earn your affiliate. An affiliate program is a great way to motivate other people to promote your tokens.
-    /// @dev `donation` How namy percents from clear profit you want to automatically donate to support the service.
+    /// @dev `donation` How many percents from clear profit you want to automatically donate to support the service.
     function makeOffer(uint256 id, uint256 price, uint256 reserve, uint8[] memory bulkDiscounts, uint8 affiliateInterest, uint8 donation ) external virtual {
         require( balanceOf(msg.sender, id)>0, _DO_NOT_HAVE_SUCH_TOKEN);
         require( affiliateInterest<100, _PERCENTS_MUST_BE_LESS_100);
@@ -156,12 +168,14 @@ contract Soveren is ERC1155, PullPayment, ReentrancyGuard {
             price: price, reserve: reserve, bulkDiscounts: bulkDiscounts,
             affiliateInterest: affiliateInterest, donation:donation
         });
+
+        emit offer( id, price, reserve, bulkDiscounts, affiliateInterest, donation );
     }
 
     /// @dev Removes sale offer of token type `id`
-    function removeOffer(uint256 id) external virtual {
-        delete _offers[id][msg.sender];
-    }
+//    function removeOffer(uint256 id) external virtual {
+//        delete _offers[id][msg.sender];
+//    }
 
     /// @dev Returns `seller`s sale offer of token type `id`
     function getOffer(address payable seller, uint256 id) external view virtual returns (Offer memory){
@@ -320,6 +334,46 @@ contract Soveren is ERC1155, PullPayment, ReentrancyGuard {
         }
 
         return votes;
+    }
+
+    // PROFILE
+
+    /// @dev Sets your profile metadata uri
+    function setProfileUri(string memory uri_)
+    public virtual {
+        _profiles[msg.sender].uri  = uri_;
+    }
+
+    /// @dev Gets profile with adr metadata uri
+    function getProfileUri(address payable adr)
+    external view virtual returns (string memory) {
+        return _profiles[adr].uri;
+    }
+
+    /// @dev Returns array of ids of your products
+    function getInventory()
+    external view virtual returns (uint256[] memory) {
+        Profile storage profile = _profiles[msg.sender];
+        uint256[] memory products = new uint256[](profile.productsCount-1);
+
+        for (uint32 i=0; i<profile.productsCount; i++ ) {
+            products[i] = profile.productsIndex[i];
+        }
+
+        return products;
+    }
+
+    /// @dev Returns array of ids of products offered for sale
+    function getOfferedProducts(address payable adr)
+    external view virtual returns (uint256[] memory) {
+        Profile storage profile = _profiles[adr];
+        uint256[] memory offers = new uint256[](profile.offersCount-1);
+
+        for (uint32 i=0; i<profile.offersCount; i++ ) {
+            offers[i] = profile.offersIndex[i];
+        }
+
+        return offers;
     }
 
 }
