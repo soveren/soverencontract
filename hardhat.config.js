@@ -2,6 +2,7 @@ require("@nomiclabs/hardhat-waffle");
 require("hardhat-typechain");
 require("solidity-coverage");
 require("hardhat-preprocessor");
+require('hardhat-contract-sizer');
 require("@nomiclabs/hardhat-ethers");
 const {removeConsoleLog} = require("hardhat-preprocessor");
 

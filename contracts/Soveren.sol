@@ -4,7 +4,7 @@ pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import "@openzeppelin/contracts/payment/PullPayment.sol";
-import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+//import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/math/Math.sol";
 //import "hardhat/console.sol";
@@ -13,7 +13,7 @@ import "@openzeppelin/contracts/math/Math.sol";
 /// @author Slavik V Bogdanov
 /// @dev This contract utilized at the soverenjs library and Soveren Vue app.
 /// @dev `solidity-docgen` comment tag @param do not work for some reason for now, so @dev used for now.
-contract Soveren is ERC1155, PullPayment, ReentrancyGuard {
+contract Soveren is ERC1155, PullPayment/*, ReentrancyGuard*/ {
     using SafeMath for uint256;
     using SafeMath for uint32;
 
@@ -60,10 +60,9 @@ contract Soveren is ERC1155, PullPayment, ReentrancyGuard {
 
     bytes4 private constant  _INTERFACE_ID_SOVEREN = 0x5356524E; // 'SVRN'
 
-    string private constant _DO_NOT_HAVE_SUCH_TOKEN     = "SVRN: You do not have such token";
-    string private constant _TOKEN_IS_NOT_OFFERED       = "SVRN: Token is not offered";
-    string private constant _PERCENTS_MUST_BE_LESS_100  = "SVRN: Percents must be less 100";
-    string private constant _ONLY_OWNER_CAN_TRANSFER    = "SVRN: Only owner can transfer";
+    string private constant _TOKEN_NOT_FOUND            = "SV: id not found";
+    string private constant _ACCESS_DENIED              = "SV: Access denied";
+    string private constant _WRONG_PARAM_VALUE          = "SV: Wrong param";
 
     event buySingle(address payable seller, uint256 id, uint256 amount, address payable affiliate);
     event offer(uint256 id, uint256 price, uint256 reserve, uint8[] bulkDiscounts, uint8 affiliateInterest, uint8 donation);
@@ -79,23 +78,39 @@ contract Soveren is ERC1155, PullPayment, ReentrancyGuard {
     // MINTING, BURNING, TRANSFER
 
     /// @dev Creates `amount` tokens of new token type `id`, and assigns them to sender.
+    /// @dev When you mints more all
     /// @param id Token id
     /// @param amount how many pieces to mint
     /// @param uri_ metadata uri https://eips.ethereum.org/EIPS/eip-1155#metadata
     /// @param privateUri_ uri of paid file (accessed to token holders only)
     /// @param canMintMore set to `true` to enable additional minting
     function mint(uint256 id, uint256 amount, string memory uri_, string memory privateUri_, bool canMintMore)
-    public virtual nonReentrant {
-        require( _products[id].creator == address(0), "SVRN: Token already exists");
+    public virtual /*nonReentrant*/ {
+        if (_products[id].creator == address(0)) { // new token
 
-        address payable creator = msg.sender;
-        Product storage product = _products[id];
-        product.creator = creator;
-        product.uri = uri_;
-        product.privateUri = privateUri_;
-        product.canMintMore = canMintMore;
+            address payable creator = msg.sender;
+            Product storage product = _products[id];
+            product.creator = creator;
+            product.uri = uri_;
+            product.privateUri = privateUri_;
+            product.canMintMore = canMintMore;
 
-        _mint(creator, id, amount, msg.data);
+            _mint(creator, id, amount, msg.data);
+
+            Profile storage profile = _profiles[msg.sender];
+            for (uint32 i=0; i<profile.productsCount; i++ ) {
+                if (profile.productsIndex[i]==id) return; // check id already in index
+            }
+            profile.productsIndex[profile.productsCount] = id;
+            profile.productsCount++;
+            require( profile.productsCount>0 );
+
+        } else {
+
+            require( _products[id].creator == msg.sender && _products[id].canMintMore, _ACCESS_DENIED);
+            _mint(msg.sender, id, amount, msg.data);
+
+        }
     }
 
     /// @dev Returns `creator` address for token `id`
@@ -104,22 +119,22 @@ contract Soveren is ERC1155, PullPayment, ReentrancyGuard {
     }
 
     /// @dev Creates `amount` tokens of existing token type `id`, and assigns them to sender
-//    function mintMore(uint256 id, uint256 amount) external virtual nonReentrant {
-//        require( _products[id].creator == msg.sender, "SVRN: Mint more can token creator only");
-//        require( _products[id].canMintMore, "SVRN: mintMore disabled");
+//    function mintMore(uint256 id, uint256 amount) external virtual /*nonReentrant*/ {
+//        require( _products[id].creator == msg.sender, "SV: Mint more can token creator only");
+//        require( _products[id].canMintMore, "SV: mintMore disabled");
 //
 //        _mint(msg.sender, id, amount, msg.data);
 //    }
 
     /// @dev Burns `amount` tokens of token type `id`
-    function burn(uint256 id, uint256 amount) external virtual nonReentrant {
+    function burn(uint256 id, uint256 amount) external virtual /*nonReentrant*/ {
         _burn(msg.sender, id, amount);
     }
 
     function safeTransferFrom( address from, address to, uint256 id, uint256 amount, bytes memory data)
-    public nonReentrant virtual override
+    public /*nonReentrant*/ virtual override
     {
-        require(from == msg.sender, _ONLY_OWNER_CAN_TRANSFER );
+        require(from == msg.sender, _ACCESS_DENIED );
         super.safeTransferFrom( from, to, id, amount, data);
     }
 
@@ -130,9 +145,9 @@ contract Soveren is ERC1155, PullPayment, ReentrancyGuard {
 //    }
 
     function safeBatchTransferFrom( address from, address to, uint256[] memory ids, uint256[] memory amounts, bytes memory data)
-    public nonReentrant virtual override
+    public /*nonReentrant*/ virtual override
     {
-        require(from == msg.sender, _ONLY_OWNER_CAN_TRANSFER );
+        require(from == msg.sender, _ACCESS_DENIED );
         super.safeBatchTransferFrom(from, to, ids, amounts, data);
     }
 
@@ -152,15 +167,14 @@ contract Soveren is ERC1155, PullPayment, ReentrancyGuard {
     /// @dev `affiliateInterest` How many percents from purchase will earn your affiliate. An affiliate program is a great way to motivate other people to promote your tokens.
     /// @dev `donation` How many percents from clear profit you want to automatically donate to support the service.
     function makeOffer(uint256 id, uint256 price, uint256 reserve, uint8[] memory bulkDiscounts, uint8 affiliateInterest, uint8 donation ) external virtual {
-        require( balanceOf(msg.sender, id)>0, _DO_NOT_HAVE_SUCH_TOKEN);
-        require( affiliateInterest<100, _PERCENTS_MUST_BE_LESS_100);
-        require( donation<100, _PERCENTS_MUST_BE_LESS_100);
+        require( balanceOf(msg.sender, id)>0, _TOKEN_NOT_FOUND);
+        require( affiliateInterest<100, _WRONG_PARAM_VALUE);
+        require( donation<100, _WRONG_PARAM_VALUE);
 
         uint8 lastDiscount=0;
         for(uint i=0; i<bulkDiscounts.length;i++) {
             uint8 discount = bulkDiscounts[i];
-            require( discount<100, _PERCENTS_MUST_BE_LESS_100);
-            require( discount>lastDiscount, "SVRN: Each next discount must be higher");
+            require( discount<100 && discount>lastDiscount, _WRONG_PARAM_VALUE);
             lastDiscount=discount;
         }
 
@@ -170,6 +184,15 @@ contract Soveren is ERC1155, PullPayment, ReentrancyGuard {
         });
 
         emit offer( id, price, reserve, bulkDiscounts, affiliateInterest, donation );
+
+        Profile storage profile = _profiles[msg.sender];
+        for (uint32 i=0; i<profile.offersCount; i++ ) {
+            if (profile.offersIndex[i]==id) return; // check id already in index
+        }
+        profile.offersIndex[profile.offersCount] = id;
+        profile.offersCount++;
+        require( profile.offersCount>0 ); // overflow check
+
     }
 
     /// @dev Removes sale offer of token type `id`
@@ -189,6 +212,7 @@ contract Soveren is ERC1155, PullPayment, ReentrancyGuard {
 
     /// @dev Returns `seller`s offered amount of token type `id`
     function getOfferedAmount(address payable seller, uint256 id) public view virtual returns (uint256){
+        if (_offers[id][seller].price==0) return 0; // if price 0 then
         uint256 balance = balanceOf(seller, id);
         uint256 reserve = _offers[id][seller].reserve;
         if (balance > reserve) return balance.sub(reserve);
@@ -199,7 +223,7 @@ contract Soveren is ERC1155, PullPayment, ReentrancyGuard {
     function getPriceForAmount(address payable seller, uint256 id, uint256 amount) public view virtual returns (uint256) {
         Offer memory offer = _offers[id][seller];
         uint256 basePrice = offer.price;
-        require( basePrice > 0, _TOKEN_IS_NOT_OFFERED );
+        require( basePrice > 0, _TOKEN_NOT_FOUND );
 
         uint8[] memory bulkDiscounts = offer.bulkDiscounts;
         uint8 discount = 0;
@@ -222,12 +246,12 @@ contract Soveren is ERC1155, PullPayment, ReentrancyGuard {
     /// @dev `affiliate` will earn `affiliateInterest` percents from value
     /// @dev `seller` also automatically donate `donation` percents from profit (value-affiliate interest)
     function buy(address payable seller, uint256 id, uint256 amount, address payable affiliate)
-    external payable virtual nonReentrant {
+    external payable virtual /*nonReentrant*/ {
         Offer storage offer = _offers[id][seller];
-        require( offer.price>0, _TOKEN_IS_NOT_OFFERED);
-        require( getOfferedAmount(seller, id)>=amount, "SVRN: amount exceeds supply");
+        require( offer.price>0, _TOKEN_NOT_FOUND);
+        require( getOfferedAmount(seller, id)>=amount, _WRONG_PARAM_VALUE);
         uint256 price = getPriceForAmount(seller, id, amount);
-        require( msg.value == price, "SVRN: value is not equal to amount price");
+        require( msg.value == price, _WRONG_PARAM_VALUE);
 
         uint256 affiliateProfit = 0;
         uint256 donationProfit = 0;
@@ -259,7 +283,7 @@ contract Soveren is ERC1155, PullPayment, ReentrancyGuard {
 
     /// @dev Returns `privateUri` for token type `id`. Sender must own token of this type.
     function privateUri(uint256 id) external view virtual returns (string memory) {
-        require(balanceOf(msg.sender, id)>0, "SVRN: You do not have such token");
+        require(balanceOf(msg.sender, id)>0, _TOKEN_NOT_FOUND);
         return _products[id].privateUri;
     }
 
@@ -269,11 +293,11 @@ contract Soveren is ERC1155, PullPayment, ReentrancyGuard {
     /// @dev `rating` 1-255.
     /// @dev comment your comment about token (product). 140 bytes max.
     function vote(uint256 id, uint8 rating, string memory comment) external virtual {
-        require( bytes(comment).length<=140, "SVRN: comment length must not exceed 140 bytes");
-        require(rating>0, "SVRN: rating must not be 0");
+        require( bytes(comment).length<=140, _WRONG_PARAM_VALUE);
+        require(rating>0, _WRONG_PARAM_VALUE);
 
         Product storage product = _products[id];
-        require( product.creator != address(0), "SVRN: Token not found");
+        require( product.creator != address(0), _TOKEN_NOT_FOUND);
 
         Vote storage vote = product.votes[msg.sender];
         bool ratedBefore = vote.rating > 0;
@@ -283,7 +307,7 @@ contract Soveren is ERC1155, PullPayment, ReentrancyGuard {
         else {
             product.votesIndex[product.votesCount] = msg.sender;
             product.votesCount += 1;
-            require(product.votesCount>0, "SVRN: max votes reached");
+            require(product.votesCount>0);
         }
 
         vote.rating = rating;
@@ -293,8 +317,7 @@ contract Soveren is ERC1155, PullPayment, ReentrancyGuard {
 
     /// @dev Returns your previous vote for token `id`.
     function getVote(uint256 id) public view virtual returns (Vote memory) {
-        Product storage product = _products[id];
-        return product.votes[msg.sender];
+        return _products[id].votes[msg.sender];
     }
 
     /// @dev Returns average rating (accumulated rating divided by votes count) for token `id`
@@ -310,9 +333,10 @@ contract Soveren is ERC1155, PullPayment, ReentrancyGuard {
     }
 
     /// @dev Returns last `count` votes, skipping `skip` items for token `id`
+    /// @dev count must be less or equal 100.
     /// @dev Useful for getting comments / stars feed
     function getVotes(uint256 id, uint32 skip, uint32 count) public view virtual returns (Vote[] memory) {
-        require(count<=100, "SVRN: count exceeds 100");
+        require(count<=100, _WRONG_PARAM_VALUE);
 
         Product storage product = _products[id];
         uint itemsCount;
@@ -364,6 +388,7 @@ contract Soveren is ERC1155, PullPayment, ReentrancyGuard {
     }
 
     /// @dev Returns array of ids of products offered for sale
+    /// @dev Check what offer price greater 0 and offered amount greater 0, because there may be old (not actual) offers.
     function getOfferedProducts(address payable adr)
     external view virtual returns (uint256[] memory) {
         Profile storage profile = _profiles[adr];
