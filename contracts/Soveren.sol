@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.7.0;
+pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
-import "@openzeppelin/contracts/payment/PullPayment.sol";
+import "@openzeppelin/contracts/security/PullPayment.sol";
 //import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/math/SafeMath.sol";
-import "@openzeppelin/contracts/math/Math.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+//import "@openzeppelin/contracts/utils/math/Math.sol";
 //import "hardhat/console.sol";
 
 /// @title Contract for free and sovereign market
@@ -16,6 +16,7 @@ import "@openzeppelin/contracts/math/Math.sol";
 contract Soveren is ERC1155, PullPayment/*, ReentrancyGuard*/ {
     using SafeMath for uint256;
     using SafeMath for uint32;
+    using Address for address;
 
     struct Vote {
         uint8 rating;
@@ -38,7 +39,7 @@ contract Soveren is ERC1155, PullPayment/*, ReentrancyGuard*/ {
         uint256 reserve;          // how many tokens reserve (do not sell)
         uint8[] bulkDiscounts;    // discounts array for amount of 10,100,1000 etc.
         uint8 affiliateInterest;  // how many percents will receive promoter (0-99)
-        uint8 donation;           // per product donation (percents, 0-99)
+        uint8 donation;           // per product donation (percents from clear profit, 0-99)
     }
 
     struct Profile {
@@ -49,6 +50,8 @@ contract Soveren is ERC1155, PullPayment/*, ReentrancyGuard*/ {
         mapping (uint32 => uint256) offersIndex;
     }
 
+    bytes4 private constant  _INTERFACE_ID_SOVEREN = 0x5356524E; // 'SVRN'
+
     // Mapping to profiles
     mapping (address => Profile) private _profiles;
 
@@ -58,21 +61,28 @@ contract Soveren is ERC1155, PullPayment/*, ReentrancyGuard*/ {
     // Mapping from token ID to offers
     mapping (uint256 => mapping(address => Offer)) private _offers;
 
-    bytes4 private constant  _INTERFACE_ID_SOVEREN = 0x5356524E; // 'SVRN'
+    address private temporaryApprovedAccount;
+    address private temporaryApprovedOperator;
+
+    modifier temporaryApproveSenderForSeller(address seller) {
+        temporaryApprovedAccount = seller;
+        temporaryApprovedOperator = msg.sender;
+        _;
+        temporaryApprovedAccount = address(0);
+        temporaryApprovedOperator = address(0);
+    }
 
     string private constant _TOKEN_NOT_FOUND            = "SV: id not found";
     string private constant _ACCESS_DENIED              = "SV: Access denied";
     string private constant _WRONG_PARAM_VALUE          = "SV: Wrong param";
 
-    event buySingle(address payable seller, uint256 id, uint256 amount, address payable affiliate);
-    event offer(uint256 id, uint256 price, uint256 reserve, uint8[] bulkDiscounts, uint8 affiliateInterest, uint8 donation);
+    event Bought(address payable seller, uint256 id, uint256 amount, address payable affiliate);
+    event NewOffer(uint256 id, uint256 price, uint256 reserve, uint8[] bulkDiscounts, uint8 affiliateInterest, uint8 donation);
 
     address payable addressForDonations;
 
-    constructor() ERC1155("") {
-        addressForDonations = msg.sender;
-        // register the supported interfaces to conform to SOVEREN via ERC165
-        _registerInterface(_INTERFACE_ID_SOVEREN);
+    constructor(address _addressForDonations) ERC1155("") {
+        addressForDonations = payable(_addressForDonations);
     }
 
     // MINTING, BURNING, TRANSFER
@@ -88,7 +98,7 @@ contract Soveren is ERC1155, PullPayment/*, ReentrancyGuard*/ {
     public virtual /*nonReentrant*/ {
         if (_products[id].creator == address(0)) { // new token
 
-            address payable creator = msg.sender;
+            address payable creator = payable(msg.sender);
             Product storage product = _products[id];
             product.creator = creator;
             product.uri = uri_;
@@ -183,7 +193,7 @@ contract Soveren is ERC1155, PullPayment/*, ReentrancyGuard*/ {
             affiliateInterest: affiliateInterest, donation:donation
         });
 
-        emit offer( id, price, reserve, bulkDiscounts, affiliateInterest, donation );
+        emit NewOffer( id, price, reserve, bulkDiscounts, affiliateInterest, donation );
 
         Profile storage profile = _profiles[msg.sender];
         for (uint32 i=0; i<profile.offersCount; i++ ) {
@@ -205,9 +215,10 @@ contract Soveren is ERC1155, PullPayment/*, ReentrancyGuard*/ {
         return _offers[id][seller];
     }
 
+
     /// @dev See {IERC1155-isApprovedForAll}.
     function isApprovedForAll(address account, address operator) public view virtual override returns (bool) {
-        return true; // for now we approve transfers from all accounts for buy method below
+        return account==temporaryApprovedAccount && operator==temporaryApprovedOperator; // for now we approve transfers from all accounts for buy method below
     }
 
     /// @dev Returns `seller`s offered amount of token type `id`
@@ -246,7 +257,7 @@ contract Soveren is ERC1155, PullPayment/*, ReentrancyGuard*/ {
     /// @dev `affiliate` will earn `affiliateInterest` percents from value
     /// @dev `seller` also automatically donate `donation` percents from profit (value-affiliate interest)
     function buy(address payable seller, uint256 id, uint256 amount, address payable affiliate)
-    external payable virtual /*nonReentrant*/ {
+    external payable virtual temporaryApproveSenderForSeller(seller) /*nonReentrant*/ {
         Offer storage offer = _offers[id][seller];
         require( offer.price>0, _TOKEN_NOT_FOUND);
         require( getOfferedAmount(seller, id)>=amount, _WRONG_PARAM_VALUE);
@@ -273,11 +284,11 @@ contract Soveren is ERC1155, PullPayment/*, ReentrancyGuard*/ {
 
         // Transfer tokens to buyer
         super.safeTransferFrom( seller, msg.sender, id, amount, msg.data);
-        emit buySingle(seller, id, amount, affiliate);
+        emit Bought(seller, id, amount, affiliate);
     }
 
     /// @dev Returns metadata uri for token type `id`.
-    function uri(uint256 id) external view virtual override returns (string memory) {
+    function uri(uint256 id) public view virtual override returns (string memory) {
         return _products[id].uri;
     }
 
@@ -299,19 +310,19 @@ contract Soveren is ERC1155, PullPayment/*, ReentrancyGuard*/ {
         Product storage product = _products[id];
         require( product.creator != address(0), _TOKEN_NOT_FOUND);
 
-        Vote storage vote = product.votes[msg.sender];
-        bool ratedBefore = vote.rating > 0;
+        Vote storage v = product.votes[msg.sender];
+        bool ratedBefore = v.rating > 0;
 
         if (ratedBefore)
-            product.accumulatedRating = product.accumulatedRating.sub(vote.rating); // decrease old value first
+            product.accumulatedRating = product.accumulatedRating.sub(v.rating); // decrease old value first
         else {
             product.votesIndex[product.votesCount] = msg.sender;
             product.votesCount += 1;
             require(product.votesCount>0);
         }
 
-        vote.rating = rating;
-        vote.comment = comment;
+        v.rating = rating;
+        v.comment = comment;
         product.accumulatedRating = product.accumulatedRating.add(rating);
     }
 
@@ -353,8 +364,8 @@ contract Soveren is ERC1155, PullPayment/*, ReentrancyGuard*/ {
         uint32 offset = uint32(product.votesCount.sub(skip).sub(1));
         for (uint32 i=0; i<itemsCount; i++ ) {
             address voter = product.votesIndex[offset-i];
-            Vote memory vote = product.votes[ voter ];
-            votes[i] = vote;
+            Vote memory v = product.votes[ voter ];
+            votes[i] = v;
         }
 
         return votes;
