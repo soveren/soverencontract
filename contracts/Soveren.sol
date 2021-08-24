@@ -18,48 +18,50 @@ contract Soveren is ERC1155, PullPayment/*, ReentrancyGuard*/ {
     using SafeMath for uint32;
     using Address for address;
 
+    uint256 private constant MAX_UINT = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff; // max uint256
+
+    string private constant _TOKEN_NOT_FOUND   = "SV: id not found";
+    string private constant _ACCESS_DENIED     = "SV: Access denied";
+    string private constant _WRONG_PARAM_VALUE = "SV: Wrong param";
+
     struct Vote {
         uint8 rating;
+        uint32 revision; //TODO
         string comment;
     }
 
-    struct Product {
-        address payable creator;  // product creator
+    struct Revision {
         string uri;               // metadata uri
         string privateUri;        // simple DRM for digital products
-        bool canMintMore;         // is it possible to mint more tokens of this type?
+    }
+
+    struct Product {
+        bool published;
+        address payable creator;  // product creator
+        Revision[] revisions;
+        string uri;               // metadata uri
+        string privateUri;        // simple DRM for digital products
+        uint256 price;            // base price ETH
+        uint8 affiliateInterest;  // how many percents will receive promoter (0-99)
+        uint8 donation;           // per product donation (percents from clear profit, 0-99)
+
         uint32 votesCount;
         uint256 accumulatedRating;
         mapping (address => Vote) votes;
         mapping (uint32 => address) votesIndex;
     }
 
-    struct Offer {
-        uint256 price;            // base price ETH
-        uint256 reserve;          // how many tokens reserve (do not sell)
-        uint8[] bulkDiscounts;    // discounts array for amount of 10,100,1000 etc.
-        uint8 affiliateInterest;  // how many percents will receive promoter (0-99)
-        uint8 donation;           // per product donation (percents from clear profit, 0-99)
-    }
-
     struct Profile {
         string uri;               // profile metadata uri
-        uint32 productsCount;
-        uint32 offersCount;
-        mapping (uint32 => uint256) productsIndex;
-        mapping (uint32 => uint256) offersIndex;
+        uint256[] productsIndex;
+        uint256[] purchasedIndex;
     }
-
-    bytes4 private constant  _INTERFACE_ID_SOVEREN = 0x5356524E; // 'SVRN'
 
     // Mapping to profiles
     mapping (address => Profile) private _profiles;
 
     // Mapping to products
     mapping (uint256 => Product) private _products;
-
-    // Mapping from token ID to offers
-    mapping (uint256 => mapping(address => Offer)) private _offers;
 
     address private temporaryApprovedAccount;
     address private temporaryApprovedOperator;
@@ -72,12 +74,10 @@ contract Soveren is ERC1155, PullPayment/*, ReentrancyGuard*/ {
         temporaryApprovedOperator = address(0);
     }
 
-    string private constant _TOKEN_NOT_FOUND            = "SV: id not found";
-    string private constant _ACCESS_DENIED              = "SV: Access denied";
-    string private constant _WRONG_PARAM_VALUE          = "SV: Wrong param";
 
-    event Bought(address payable seller, uint256 id, uint256 amount, address payable affiliate);
-    event NewOffer(uint256 id, uint256 price, uint256 reserve, uint8[] bulkDiscounts, uint8 affiliateInterest, uint8 donation);
+    event Bought(address payable seller, uint256 id, uint256 price, address payable affiliate, uint256 affiliateProfit, uint256 donationProfit);
+    event NewProduct(uint256 id, string uri, uint256 price, uint8 affiliateInterest, uint8 donation);
+    event NewRevision(uint256 id, string uri);
 
     address payable addressForDonations;
 
@@ -90,130 +90,77 @@ contract Soveren is ERC1155, PullPayment/*, ReentrancyGuard*/ {
     /// @dev Creates `amount` tokens of new token type `id`, and assigns them to sender.
     /// @dev When you mints more all
     /// @param id Token id
-    /// @param amount how many pieces to mint
-    /// @param uri_ metadata uri https://eips.ethereum.org/EIPS/eip-1155#metadata
-    /// @param privateUri_ uri of paid file (accessed to token holders only)
-    /// @param canMintMore set to `true` to enable additional minting
-    function mint(uint256 id, uint256 amount, string memory uri_, string memory privateUri_, bool canMintMore)
+    /// @param _uri metadata uri https://eips.ethereum.org/EIPS/eip-1155#metadata
+    /// @param _privateUri uri of paid file (accessed to token holders only)
+    function mint(
+        uint256 id,
+        string memory _uri,
+        string memory _privateUri,
+        uint256 _price,
+        uint8 _affiliateInterest,
+        uint8 _donation )
     public virtual /*nonReentrant*/ {
+        require( _affiliateInterest<100, _WRONG_PARAM_VALUE);
+        require( _donation<100, _WRONG_PARAM_VALUE);
+
+
         if (_products[id].creator == address(0)) { // new token
 
             address payable creator = payable(msg.sender);
             Product storage product = _products[id];
             product.creator = creator;
-            product.uri = uri_;
-            product.privateUri = privateUri_;
-            product.canMintMore = canMintMore;
+            product.published = true;
+            product.price = _price;
+            product.affiliateInterest = _affiliateInterest;
+            product.donation = _donation;
+            product.uri = _uri;
+            product.privateUri = _privateUri;
 
-            _mint(creator, id, amount, msg.data);
+            _mint(creator, id, MAX_UINT, msg.data);
 
             Profile storage profile = _profiles[msg.sender];
-            for (uint32 i=0; i<profile.productsCount; i++ ) {
-                if (profile.productsIndex[i]==id) return; // check id already in index
-            }
-            profile.productsIndex[profile.productsCount] = id;
-            profile.productsCount++;
-            require( profile.productsCount>0 );
+            profile.productsIndex.push(id);
 
-        } else {
-
-            require( _products[id].creator == msg.sender && _products[id].canMintMore, _ACCESS_DENIED);
-            _mint(msg.sender, id, amount, msg.data);
+            emit NewProduct( id, _uri, _price, _affiliateInterest, _donation );
 
         }
     }
+
+    function updateProduct(
+        uint256 id,
+        string memory _uri,
+        string memory _privateUri,
+        uint256 _price,
+        uint8 _affiliateInterest,
+        uint8 _donation
+    ) public virtual  {
+        require(_products[id].creator == msg.sender, _ACCESS_DENIED);
+
+        Product storage product = _products[id];
+        Revision memory rev;
+        rev.uri = product.uri;
+        rev.privateUri = product.privateUri;
+
+        _products[id].revisions.push(rev);
+
+        product.price = _price;
+        product.affiliateInterest = _affiliateInterest;
+        product.donation = _donation;
+        product.uri = _uri;
+        product.privateUri = _privateUri;
+
+        emit NewRevision( id, _uri );
+
+    }
+
 
     /// @dev Returns `creator` address for token `id`
     function getCreator(uint256 id) external view virtual returns (address payable){
         return _products[id].creator;
     }
 
-    /// @dev Creates `amount` tokens of existing token type `id`, and assigns them to sender
-//    function mintMore(uint256 id, uint256 amount) external virtual /*nonReentrant*/ {
-//        require( _products[id].creator == msg.sender, "SV: Mint more can token creator only");
-//        require( _products[id].canMintMore, "SV: mintMore disabled");
-//
-//        _mint(msg.sender, id, amount, msg.data);
-//    }
-
-    /// @dev Burns `amount` tokens of token type `id`
-    function burn(uint256 id, uint256 amount) external virtual /*nonReentrant*/ {
-        _burn(msg.sender, id, amount);
-    }
-
-    function safeTransferFrom( address from, address to, uint256 id, uint256 amount, bytes memory data)
-    public /*nonReentrant*/ virtual override
-    {
-        require(from == msg.sender, _ACCESS_DENIED );
-        super.safeTransferFrom( from, to, id, amount, data);
-    }
-
-//    /// @dev Transfers `to` address `amount` tokens of token type `id`
-//    function transfer( address to, uint256 id, uint256 amount) public virtual
-//    {
-//        safeTransferFrom( msg.sender, to, id, amount, msg.data);
-//    }
-
-    function safeBatchTransferFrom( address from, address to, uint256[] memory ids, uint256[] memory amounts, bytes memory data)
-    public /*nonReentrant*/ virtual override
-    {
-        require(from == msg.sender, _ACCESS_DENIED );
-        super.safeBatchTransferFrom(from, to, ids, amounts, data);
-    }
-
-//    /// @dev Transfers `to` address `amounts` tokens of token types `ids`
-//    function batchTransfer( address to, uint256[] memory ids, uint256[] memory amounts)
-//    public virtual
-//    {
-//        safeBatchTransferFrom(msg.sender, to, ids, amounts, msg.data);
-//    }
 
     // OFFERS, BUYING
-
-    /// @dev Creates sale offer of token type `id`.
-    /// @dev `price` price for 1 token in wei. Set to 0 to 'remove' offer.
-    /// @dev `reserve` Amount of tokens to reserve (do not offer it for sale).
-    /// @dev `bulkDiscounts` You can specify bulk discounts at this array for 10+, 100+, 1000+ etc pieces. For example if you set `bulkDiscounts` to `[5,10,20,50]`, then it means what you give 5% discount for 10 and more pieces, 10% for 100+, 20% for 1000+, and 50% discount for 10000 pieces and more.
-    /// @dev `affiliateInterest` How many percents from purchase will earn your affiliate. An affiliate program is a great way to motivate other people to promote your tokens.
-    /// @dev `donation` How many percents from clear profit you want to automatically donate to support the service.
-    function makeOffer(uint256 id, uint256 price, uint256 reserve, uint8[] memory bulkDiscounts, uint8 affiliateInterest, uint8 donation ) external virtual {
-        require( balanceOf(msg.sender, id)>0, _TOKEN_NOT_FOUND);
-        require( affiliateInterest<100, _WRONG_PARAM_VALUE);
-        require( donation<100, _WRONG_PARAM_VALUE);
-
-        uint8 lastDiscount=0;
-        for(uint i=0; i<bulkDiscounts.length;i++) {
-            uint8 discount = bulkDiscounts[i];
-            require( discount<100 && discount>lastDiscount, _WRONG_PARAM_VALUE);
-            lastDiscount=discount;
-        }
-
-        _offers[id][msg.sender] = Offer({
-            price: price, reserve: reserve, bulkDiscounts: bulkDiscounts,
-            affiliateInterest: affiliateInterest, donation:donation
-        });
-
-        emit NewOffer( id, price, reserve, bulkDiscounts, affiliateInterest, donation );
-
-        Profile storage profile = _profiles[msg.sender];
-        for (uint32 i=0; i<profile.offersCount; i++ ) {
-            if (profile.offersIndex[i]==id) return; // check id already in index
-        }
-        profile.offersIndex[profile.offersCount] = id;
-        profile.offersCount++;
-        require( profile.offersCount>0 ); // overflow check
-
-    }
-
-    /// @dev Removes sale offer of token type `id`
-//    function removeOffer(uint256 id) external virtual {
-//        delete _offers[id][msg.sender];
-//    }
-
-    /// @dev Returns `seller`s sale offer of token type `id`
-    function getOffer(address payable seller, uint256 id) external view virtual returns (Offer memory){
-        return _offers[id][seller];
-    }
 
 
     /// @dev See {IERC1155-isApprovedForAll}.
@@ -221,58 +168,27 @@ contract Soveren is ERC1155, PullPayment/*, ReentrancyGuard*/ {
         return account==temporaryApprovedAccount && operator==temporaryApprovedOperator; // for now we approve transfers from all accounts for buy method below
     }
 
-    /// @dev Returns `seller`s offered amount of token type `id`
-    function getOfferedAmount(address payable seller, uint256 id) public view virtual returns (uint256){
-        if (_offers[id][seller].price==0) return 0; // if price 0 then
-        uint256 balance = balanceOf(seller, id);
-        uint256 reserve = _offers[id][seller].reserve;
-        if (balance > reserve) return balance.sub(reserve);
-        else return 0;
-    }
-
-    /// @dev Returns total `seller` price in wei for specified `amount` of token type `id` (`bulkDiscounts` applied)
-    function getPriceForAmount(address payable seller, uint256 id, uint256 amount) public view virtual returns (uint256) {
-        Offer memory offer = _offers[id][seller];
-        uint256 basePrice = offer.price;
-        require( basePrice > 0, _TOKEN_NOT_FOUND );
-
-        uint8[] memory bulkDiscounts = offer.bulkDiscounts;
-        uint8 discount = 0;
-        uint256 discountAmount = 10;
-
-        for(uint i=0; i<bulkDiscounts.length; i++) {
-            if (amount>=discountAmount) discount=bulkDiscounts[i];
-            else break;
-            discountAmount*=10;
-        }
-
-        uint256 discountedPrice = basePrice.mul(100-discount).div(100);
-        uint256 totalPrice = discountedPrice.mul(amount);
-        return totalPrice;
-    }
-
     /// @dev Process purchase from `seller` of token type `id`.
     /// @dev You must send `getPriceForAmount` ethers in transaction.
     /// @dev Amount must be not more than `getOfferedAmount`.
     /// @dev `affiliate` will earn `affiliateInterest` percents from value
     /// @dev `seller` also automatically donate `donation` percents from profit (value-affiliate interest)
-    function buy(address payable seller, uint256 id, uint256 amount, address payable affiliate)
+    function buy(address payable seller, uint256 id, address payable affiliate)
     external payable virtual temporaryApproveSenderForSeller(seller) /*nonReentrant*/ {
-        Offer storage offer = _offers[id][seller];
-        require( offer.price>0, _TOKEN_NOT_FOUND);
-        require( getOfferedAmount(seller, id)>=amount, _WRONG_PARAM_VALUE);
-        uint256 price = getPriceForAmount(seller, id, amount);
+        Product storage product = _products[id];
+        require( product.price>0, _TOKEN_NOT_FOUND);
+        uint256 price = product.price;
         require( msg.value == price, _WRONG_PARAM_VALUE);
 
         uint256 affiliateProfit = 0;
         uint256 donationProfit = 0;
 
-        if ((affiliate!=address(0)) && (offer.affiliateInterest>0)) {
-            affiliateProfit = price.mul(offer.affiliateInterest).div(100);
+        if ((affiliate!=address(0)) && (product.affiliateInterest>0)) {
+            affiliateProfit = price.mul(product.affiliateInterest).div(100);
         }
 
-        if ((offer.donation>0) && (addressForDonations!=address(0))) {
-            donationProfit = price.sub(affiliateProfit).mul(offer.donation).div(100);
+        if ((product.donation>0) && (addressForDonations!=address(0))) {
+            donationProfit = price.sub(affiliateProfit).mul(product.donation).div(100);
         }
 
         uint256 sellerProfit = price.sub(affiliateProfit).sub(donationProfit);
@@ -282,20 +198,24 @@ contract Soveren is ERC1155, PullPayment/*, ReentrancyGuard*/ {
         if (affiliateProfit>0) _asyncTransfer( affiliate, affiliateProfit);
         if (donationProfit>0)  _asyncTransfer( addressForDonations, donationProfit);
 
-        // Transfer tokens to buyer
-        super.safeTransferFrom( seller, msg.sender, id, amount, msg.data);
-        emit Bought(seller, id, amount, affiliate);
+        // Transfer token to buyer
+        super.safeTransferFrom( seller, msg.sender, id, 1, msg.data);
+        _profiles[msg.sender].purchasedIndex.push(id);
+
+        emit Bought(seller, id, price, affiliate, affiliateProfit, donationProfit);
     }
 
     /// @dev Returns metadata uri for token type `id`.
     function uri(uint256 id) public view virtual override returns (string memory) {
-        return _products[id].uri;
+        Product storage p = _products[id];
+        return p.revisions[p.revisions.length-1].uri;
     }
 
     /// @dev Returns `privateUri` for token type `id`. Sender must own token of this type.
     function privateUri(uint256 id) external view virtual returns (string memory) {
         require(balanceOf(msg.sender, id)>0, _TOKEN_NOT_FOUND);
-        return _products[id].privateUri;
+        Product storage p = _products[id];
+        return p.revisions[p.revisions.length-1].privateUri;
     }
 
     // VOTING
@@ -332,10 +252,10 @@ contract Soveren is ERC1155, PullPayment/*, ReentrancyGuard*/ {
     }
 
     /// @dev Returns average rating (accumulated rating divided by votes count) for token `id`
-    function getRating(uint256 id) public view virtual returns (uint8) {
+    function getRating(uint256 id) public view virtual returns (int8) {
         Product storage product = _products[id];
-        if (product.votesCount==0) return 0;
-        else return uint8(product.accumulatedRating.div(product.votesCount));
+        if (product.votesCount==0) return -1; //for not rated products
+        else return int8(product.accumulatedRating.div(product.votesCount));
     }
 
     /// @dev Returns total votes count for token `id`
@@ -386,30 +306,16 @@ contract Soveren is ERC1155, PullPayment/*, ReentrancyGuard*/ {
     }
 
     /// @dev Returns array of ids of your products
-    function getInventory()
+    function getPurchased()
     external view virtual returns (uint256[] memory) {
-        Profile storage profile = _profiles[msg.sender];
-        uint256[] memory products = new uint256[](profile.productsCount-1);
-
-        for (uint32 i=0; i<profile.productsCount; i++ ) {
-            products[i] = profile.productsIndex[i];
-        }
-
-        return products;
+        return _profiles[msg.sender].purchasedIndex;
     }
 
     /// @dev Returns array of ids of products offered for sale
     /// @dev Check what offer price greater 0 and offered amount greater 0, because there may be old (not actual) offers.
-    function getOfferedProducts(address payable adr)
+    function getProducts(address payable seller)
     external view virtual returns (uint256[] memory) {
-        Profile storage profile = _profiles[adr];
-        uint256[] memory offers = new uint256[](profile.offersCount-1);
-
-        for (uint32 i=0; i<profile.offersCount; i++ ) {
-            offers[i] = profile.offersIndex[i];
-        }
-
-        return offers;
+        return _profiles[seller].productsIndex;
     }
 
 }

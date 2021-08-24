@@ -25,29 +25,25 @@ interface SoverenInterface extends ethers.utils.Interface {
   functions: {
     "balanceOf(address,uint256)": FunctionFragment;
     "balanceOfBatch(address[],uint256[])": FunctionFragment;
-    "batchTransfer(address,uint256[],uint256[])": FunctionFragment;
-    "burn(uint256,uint256)": FunctionFragment;
-    "buy(address,uint256,uint256,address)": FunctionFragment;
+    "buy(address,uint256,address)": FunctionFragment;
     "getCreator(uint256)": FunctionFragment;
-    "getOffer(address,uint256)": FunctionFragment;
-    "getOfferedAmount(address,uint256)": FunctionFragment;
-    "getPriceForAmount(address,uint256,uint256)": FunctionFragment;
+    "getProducts(address)": FunctionFragment;
+    "getProfileUri(address)": FunctionFragment;
+    "getPurchased()": FunctionFragment;
     "getRating(uint256)": FunctionFragment;
     "getVote(uint256)": FunctionFragment;
     "getVotes(uint256,uint32,uint32)": FunctionFragment;
     "getVotesCount(uint256)": FunctionFragment;
     "isApprovedForAll(address,address)": FunctionFragment;
-    "makeOffer(uint256,uint256,uint256,uint8[],uint8,uint8)": FunctionFragment;
-    "mint(uint256,uint256,string,string,bool)": FunctionFragment;
-    "mintMore(uint256,uint256)": FunctionFragment;
+    "mint(uint256,string,string,uint256,uint8,uint8)": FunctionFragment;
     "payments(address)": FunctionFragment;
     "privateUri(uint256)": FunctionFragment;
-    "removeOffer(uint256)": FunctionFragment;
     "safeBatchTransferFrom(address,address,uint256[],uint256[],bytes)": FunctionFragment;
     "safeTransferFrom(address,address,uint256,uint256,bytes)": FunctionFragment;
     "setApprovalForAll(address,bool)": FunctionFragment;
+    "setProfileUri(string)": FunctionFragment;
     "supportsInterface(bytes4)": FunctionFragment;
-    "transfer(address,uint256,uint256)": FunctionFragment;
+    "updateProduct(uint256,string,string,uint256,uint8,uint8)": FunctionFragment;
     "uri(uint256)": FunctionFragment;
     "vote(uint256,uint8,string)": FunctionFragment;
     "withdrawPayments(address)": FunctionFragment;
@@ -62,32 +58,21 @@ interface SoverenInterface extends ethers.utils.Interface {
     values: [string[], BigNumberish[]]
   ): string;
   encodeFunctionData(
-    functionFragment: "batchTransfer",
-    values: [string, BigNumberish[], BigNumberish[]]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "burn",
-    values: [BigNumberish, BigNumberish]
-  ): string;
-  encodeFunctionData(
     functionFragment: "buy",
-    values: [string, BigNumberish, BigNumberish, string]
+    values: [string, BigNumberish, string]
   ): string;
   encodeFunctionData(
     functionFragment: "getCreator",
     values: [BigNumberish]
   ): string;
+  encodeFunctionData(functionFragment: "getProducts", values: [string]): string;
   encodeFunctionData(
-    functionFragment: "getOffer",
-    values: [string, BigNumberish]
+    functionFragment: "getProfileUri",
+    values: [string]
   ): string;
   encodeFunctionData(
-    functionFragment: "getOfferedAmount",
-    values: [string, BigNumberish]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "getPriceForAmount",
-    values: [string, BigNumberish, BigNumberish]
+    functionFragment: "getPurchased",
+    values?: undefined
   ): string;
   encodeFunctionData(
     functionFragment: "getRating",
@@ -110,31 +95,19 @@ interface SoverenInterface extends ethers.utils.Interface {
     values: [string, string]
   ): string;
   encodeFunctionData(
-    functionFragment: "makeOffer",
+    functionFragment: "mint",
     values: [
       BigNumberish,
+      string,
+      string,
       BigNumberish,
-      BigNumberish,
-      BigNumberish[],
       BigNumberish,
       BigNumberish
     ]
   ): string;
-  encodeFunctionData(
-    functionFragment: "mint",
-    values: [BigNumberish, BigNumberish, string, string, boolean]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "mintMore",
-    values: [BigNumberish, BigNumberish]
-  ): string;
   encodeFunctionData(functionFragment: "payments", values: [string]): string;
   encodeFunctionData(
     functionFragment: "privateUri",
-    values: [BigNumberish]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "removeOffer",
     values: [BigNumberish]
   ): string;
   encodeFunctionData(
@@ -150,12 +123,23 @@ interface SoverenInterface extends ethers.utils.Interface {
     values: [string, boolean]
   ): string;
   encodeFunctionData(
+    functionFragment: "setProfileUri",
+    values: [string]
+  ): string;
+  encodeFunctionData(
     functionFragment: "supportsInterface",
     values: [BytesLike]
   ): string;
   encodeFunctionData(
-    functionFragment: "transfer",
-    values: [string, BigNumberish, BigNumberish]
+    functionFragment: "updateProduct",
+    values: [
+      BigNumberish,
+      string,
+      string,
+      BigNumberish,
+      BigNumberish,
+      BigNumberish
+    ]
   ): string;
   encodeFunctionData(functionFragment: "uri", values: [BigNumberish]): string;
   encodeFunctionData(
@@ -172,20 +156,18 @@ interface SoverenInterface extends ethers.utils.Interface {
     functionFragment: "balanceOfBatch",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(
-    functionFragment: "batchTransfer",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(functionFragment: "burn", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "buy", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "getCreator", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "getOffer", data: BytesLike): Result;
   decodeFunctionResult(
-    functionFragment: "getOfferedAmount",
+    functionFragment: "getProducts",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "getPriceForAmount",
+    functionFragment: "getProfileUri",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getPurchased",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "getRating", data: BytesLike): Result;
@@ -199,15 +181,9 @@ interface SoverenInterface extends ethers.utils.Interface {
     functionFragment: "isApprovedForAll",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(functionFragment: "makeOffer", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "mint", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "mintMore", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "payments", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "privateUri", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "removeOffer",
-    data: BytesLike
-  ): Result;
   decodeFunctionResult(
     functionFragment: "safeBatchTransferFrom",
     data: BytesLike
@@ -221,10 +197,17 @@ interface SoverenInterface extends ethers.utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
+    functionFragment: "setProfileUri",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "supportsInterface",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(functionFragment: "transfer", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "updateProduct",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "uri", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "vote", data: BytesLike): Result;
   decodeFunctionResult(
@@ -234,17 +217,21 @@ interface SoverenInterface extends ethers.utils.Interface {
 
   events: {
     "ApprovalForAll(address,address,bool)": EventFragment;
+    "Bought(address,uint256,uint256,address,uint256,uint256)": EventFragment;
+    "NewProduct(uint256,string,uint256,uint8,uint8)": EventFragment;
+    "NewRevision(uint256,string)": EventFragment;
     "TransferBatch(address,address,address,uint256[],uint256[])": EventFragment;
     "TransferSingle(address,address,address,uint256,uint256)": EventFragment;
     "URI(string,uint256)": EventFragment;
-    "buySingle(address,uint256,uint256,address)": EventFragment;
   };
 
   getEvent(nameOrSignatureOrTopic: "ApprovalForAll"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "Bought"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "NewProduct"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "NewRevision"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "TransferBatch"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "TransferSingle"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "URI"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "buySingle"): EventFragment;
 }
 
 export class Soveren extends Contract {
@@ -293,44 +280,16 @@ export class Soveren extends Contract {
       0: BigNumber[];
     }>;
 
-    batchTransfer(
-      to: string,
-      ids: BigNumberish[],
-      amounts: BigNumberish[],
-      overrides?: Overrides
-    ): Promise<ContractTransaction>;
-
-    "batchTransfer(address,uint256[],uint256[])"(
-      to: string,
-      ids: BigNumberish[],
-      amounts: BigNumberish[],
-      overrides?: Overrides
-    ): Promise<ContractTransaction>;
-
-    burn(
-      id: BigNumberish,
-      amount: BigNumberish,
-      overrides?: Overrides
-    ): Promise<ContractTransaction>;
-
-    "burn(uint256,uint256)"(
-      id: BigNumberish,
-      amount: BigNumberish,
-      overrides?: Overrides
-    ): Promise<ContractTransaction>;
-
     buy(
       seller: string,
       id: BigNumberish,
-      amount: BigNumberish,
       affiliate: string,
       overrides?: PayableOverrides
     ): Promise<ContractTransaction>;
 
-    "buy(address,uint256,uint256,address)"(
+    "buy(address,uint256,address)"(
       seller: string,
       id: BigNumberish,
-      amount: BigNumberish,
       affiliate: string,
       overrides?: PayableOverrides
     ): Promise<ContractTransaction>;
@@ -349,76 +308,40 @@ export class Soveren extends Contract {
       0: string;
     }>;
 
-    getOffer(
+    getProducts(
       seller: string,
-      id: BigNumberish,
       overrides?: CallOverrides
     ): Promise<{
-      0: {
-        price: BigNumber;
-        reserve: BigNumber;
-        bulkDiscounts: number[];
-        affiliateInterest: number;
-        donation: number;
-        0: BigNumber;
-        1: BigNumber;
-        2: number[];
-        3: number;
-        4: number;
-      };
+      0: BigNumber[];
     }>;
 
-    "getOffer(address,uint256)"(
+    "getProducts(address)"(
       seller: string,
-      id: BigNumberish,
       overrides?: CallOverrides
     ): Promise<{
-      0: {
-        price: BigNumber;
-        reserve: BigNumber;
-        bulkDiscounts: number[];
-        affiliateInterest: number;
-        donation: number;
-        0: BigNumber;
-        1: BigNumber;
-        2: number[];
-        3: number;
-        4: number;
-      };
+      0: BigNumber[];
     }>;
 
-    getOfferedAmount(
-      seller: string,
-      id: BigNumberish,
+    getProfileUri(
+      adr: string,
       overrides?: CallOverrides
     ): Promise<{
-      0: BigNumber;
+      0: string;
     }>;
 
-    "getOfferedAmount(address,uint256)"(
-      seller: string,
-      id: BigNumberish,
+    "getProfileUri(address)"(
+      adr: string,
       overrides?: CallOverrides
     ): Promise<{
-      0: BigNumber;
+      0: string;
     }>;
 
-    getPriceForAmount(
-      seller: string,
-      id: BigNumberish,
-      amount: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<{
-      0: BigNumber;
+    getPurchased(overrides?: CallOverrides): Promise<{
+      0: BigNumber[];
     }>;
 
-    "getPriceForAmount(address,uint256,uint256)"(
-      seller: string,
-      id: BigNumberish,
-      amount: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<{
-      0: BigNumber;
+    "getPurchased()"(overrides?: CallOverrides): Promise<{
+      0: BigNumber[];
     }>;
 
     getRating(
@@ -439,14 +362,28 @@ export class Soveren extends Contract {
       id: BigNumberish,
       overrides?: CallOverrides
     ): Promise<{
-      0: { rating: number; comment: string; 0: number; 1: string };
+      0: {
+        rating: number;
+        revision: number;
+        comment: string;
+        0: number;
+        1: number;
+        2: string;
+      };
     }>;
 
     "getVote(uint256)"(
       id: BigNumberish,
       overrides?: CallOverrides
     ): Promise<{
-      0: { rating: number; comment: string; 0: number; 1: string };
+      0: {
+        rating: number;
+        revision: number;
+        comment: string;
+        0: number;
+        1: number;
+        2: string;
+      };
     }>;
 
     getVotes(
@@ -455,7 +392,14 @@ export class Soveren extends Contract {
       count: BigNumberish,
       overrides?: CallOverrides
     ): Promise<{
-      0: { rating: number; comment: string; 0: number; 1: string }[];
+      0: {
+        rating: number;
+        revision: number;
+        comment: string;
+        0: number;
+        1: number;
+        2: string;
+      }[];
     }>;
 
     "getVotes(uint256,uint32,uint32)"(
@@ -464,7 +408,14 @@ export class Soveren extends Contract {
       count: BigNumberish,
       overrides?: CallOverrides
     ): Promise<{
-      0: { rating: number; comment: string; 0: number; 1: string }[];
+      0: {
+        rating: number;
+        revision: number;
+        comment: string;
+        0: number;
+        1: number;
+        2: string;
+      }[];
     }>;
 
     getVotesCount(
@@ -497,53 +448,23 @@ export class Soveren extends Contract {
       0: boolean;
     }>;
 
-    makeOffer(
-      id: BigNumberish,
-      price: BigNumberish,
-      reserve: BigNumberish,
-      bulkDiscounts: BigNumberish[],
-      affiliateInterest: BigNumberish,
-      donation: BigNumberish,
-      overrides?: Overrides
-    ): Promise<ContractTransaction>;
-
-    "makeOffer(uint256,uint256,uint256,uint8[],uint8,uint8)"(
-      id: BigNumberish,
-      price: BigNumberish,
-      reserve: BigNumberish,
-      bulkDiscounts: BigNumberish[],
-      affiliateInterest: BigNumberish,
-      donation: BigNumberish,
-      overrides?: Overrides
-    ): Promise<ContractTransaction>;
-
     mint(
       id: BigNumberish,
-      amount: BigNumberish,
-      uri_: string,
-      privateUri_: string,
-      canMintMore: boolean,
+      _uri: string,
+      _privateUri: string,
+      _price: BigNumberish,
+      _affiliateInterest: BigNumberish,
+      _donation: BigNumberish,
       overrides?: Overrides
     ): Promise<ContractTransaction>;
 
-    "mint(uint256,uint256,string,string,bool)"(
+    "mint(uint256,string,string,uint256,uint8,uint8)"(
       id: BigNumberish,
-      amount: BigNumberish,
-      uri_: string,
-      privateUri_: string,
-      canMintMore: boolean,
-      overrides?: Overrides
-    ): Promise<ContractTransaction>;
-
-    mintMore(
-      id: BigNumberish,
-      amount: BigNumberish,
-      overrides?: Overrides
-    ): Promise<ContractTransaction>;
-
-    "mintMore(uint256,uint256)"(
-      id: BigNumberish,
-      amount: BigNumberish,
+      _uri: string,
+      _privateUri: string,
+      _price: BigNumberish,
+      _affiliateInterest: BigNumberish,
+      _donation: BigNumberish,
       overrides?: Overrides
     ): Promise<ContractTransaction>;
 
@@ -574,16 +495,6 @@ export class Soveren extends Contract {
     ): Promise<{
       0: string;
     }>;
-
-    removeOffer(
-      id: BigNumberish,
-      overrides?: Overrides
-    ): Promise<ContractTransaction>;
-
-    "removeOffer(uint256)"(
-      id: BigNumberish,
-      overrides?: Overrides
-    ): Promise<ContractTransaction>;
 
     safeBatchTransferFrom(
       from: string,
@@ -633,6 +544,16 @@ export class Soveren extends Contract {
       overrides?: Overrides
     ): Promise<ContractTransaction>;
 
+    setProfileUri(
+      uri_: string,
+      overrides?: Overrides
+    ): Promise<ContractTransaction>;
+
+    "setProfileUri(string)"(
+      uri_: string,
+      overrides?: Overrides
+    ): Promise<ContractTransaction>;
+
     supportsInterface(
       interfaceId: BytesLike,
       overrides?: CallOverrides
@@ -647,17 +568,23 @@ export class Soveren extends Contract {
       0: boolean;
     }>;
 
-    transfer(
-      to: string,
+    updateProduct(
       id: BigNumberish,
-      amount: BigNumberish,
+      _uri: string,
+      _privateUri: string,
+      _price: BigNumberish,
+      _affiliateInterest: BigNumberish,
+      _donation: BigNumberish,
       overrides?: Overrides
     ): Promise<ContractTransaction>;
 
-    "transfer(address,uint256,uint256)"(
-      to: string,
+    "updateProduct(uint256,string,string,uint256,uint8,uint8)"(
       id: BigNumberish,
-      amount: BigNumberish,
+      _uri: string,
+      _privateUri: string,
+      _price: BigNumberish,
+      _affiliateInterest: BigNumberish,
+      _donation: BigNumberish,
       overrides?: Overrides
     ): Promise<ContractTransaction>;
 
@@ -724,44 +651,16 @@ export class Soveren extends Contract {
     overrides?: CallOverrides
   ): Promise<BigNumber[]>;
 
-  batchTransfer(
-    to: string,
-    ids: BigNumberish[],
-    amounts: BigNumberish[],
-    overrides?: Overrides
-  ): Promise<ContractTransaction>;
-
-  "batchTransfer(address,uint256[],uint256[])"(
-    to: string,
-    ids: BigNumberish[],
-    amounts: BigNumberish[],
-    overrides?: Overrides
-  ): Promise<ContractTransaction>;
-
-  burn(
-    id: BigNumberish,
-    amount: BigNumberish,
-    overrides?: Overrides
-  ): Promise<ContractTransaction>;
-
-  "burn(uint256,uint256)"(
-    id: BigNumberish,
-    amount: BigNumberish,
-    overrides?: Overrides
-  ): Promise<ContractTransaction>;
-
   buy(
     seller: string,
     id: BigNumberish,
-    amount: BigNumberish,
     affiliate: string,
     overrides?: PayableOverrides
   ): Promise<ContractTransaction>;
 
-  "buy(address,uint256,uint256,address)"(
+  "buy(address,uint256,address)"(
     seller: string,
     id: BigNumberish,
-    amount: BigNumberish,
     affiliate: string,
     overrides?: PayableOverrides
   ): Promise<ContractTransaction>;
@@ -773,65 +672,23 @@ export class Soveren extends Contract {
     overrides?: CallOverrides
   ): Promise<string>;
 
-  getOffer(
-    seller: string,
-    id: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<{
-    price: BigNumber;
-    reserve: BigNumber;
-    bulkDiscounts: number[];
-    affiliateInterest: number;
-    donation: number;
-    0: BigNumber;
-    1: BigNumber;
-    2: number[];
-    3: number;
-    4: number;
-  }>;
+  getProducts(seller: string, overrides?: CallOverrides): Promise<BigNumber[]>;
 
-  "getOffer(address,uint256)"(
+  "getProducts(address)"(
     seller: string,
-    id: BigNumberish,
     overrides?: CallOverrides
-  ): Promise<{
-    price: BigNumber;
-    reserve: BigNumber;
-    bulkDiscounts: number[];
-    affiliateInterest: number;
-    donation: number;
-    0: BigNumber;
-    1: BigNumber;
-    2: number[];
-    3: number;
-    4: number;
-  }>;
+  ): Promise<BigNumber[]>;
 
-  getOfferedAmount(
-    seller: string,
-    id: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
+  getProfileUri(adr: string, overrides?: CallOverrides): Promise<string>;
 
-  "getOfferedAmount(address,uint256)"(
-    seller: string,
-    id: BigNumberish,
+  "getProfileUri(address)"(
+    adr: string,
     overrides?: CallOverrides
-  ): Promise<BigNumber>;
+  ): Promise<string>;
 
-  getPriceForAmount(
-    seller: string,
-    id: BigNumberish,
-    amount: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
+  getPurchased(overrides?: CallOverrides): Promise<BigNumber[]>;
 
-  "getPriceForAmount(address,uint256,uint256)"(
-    seller: string,
-    id: BigNumberish,
-    amount: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
+  "getPurchased()"(overrides?: CallOverrides): Promise<BigNumber[]>;
 
   getRating(id: BigNumberish, overrides?: CallOverrides): Promise<number>;
 
@@ -843,26 +700,58 @@ export class Soveren extends Contract {
   getVote(
     id: BigNumberish,
     overrides?: CallOverrides
-  ): Promise<{ rating: number; comment: string; 0: number; 1: string }>;
+  ): Promise<{
+    rating: number;
+    revision: number;
+    comment: string;
+    0: number;
+    1: number;
+    2: string;
+  }>;
 
   "getVote(uint256)"(
     id: BigNumberish,
     overrides?: CallOverrides
-  ): Promise<{ rating: number; comment: string; 0: number; 1: string }>;
+  ): Promise<{
+    rating: number;
+    revision: number;
+    comment: string;
+    0: number;
+    1: number;
+    2: string;
+  }>;
 
   getVotes(
     id: BigNumberish,
     skip: BigNumberish,
     count: BigNumberish,
     overrides?: CallOverrides
-  ): Promise<{ rating: number; comment: string; 0: number; 1: string }[]>;
+  ): Promise<
+    {
+      rating: number;
+      revision: number;
+      comment: string;
+      0: number;
+      1: number;
+      2: string;
+    }[]
+  >;
 
   "getVotes(uint256,uint32,uint32)"(
     id: BigNumberish,
     skip: BigNumberish,
     count: BigNumberish,
     overrides?: CallOverrides
-  ): Promise<{ rating: number; comment: string; 0: number; 1: string }[]>;
+  ): Promise<
+    {
+      rating: number;
+      revision: number;
+      comment: string;
+      0: number;
+      1: number;
+      2: string;
+    }[]
+  >;
 
   getVotesCount(id: BigNumberish, overrides?: CallOverrides): Promise<number>;
 
@@ -883,53 +772,23 @@ export class Soveren extends Contract {
     overrides?: CallOverrides
   ): Promise<boolean>;
 
-  makeOffer(
-    id: BigNumberish,
-    price: BigNumberish,
-    reserve: BigNumberish,
-    bulkDiscounts: BigNumberish[],
-    affiliateInterest: BigNumberish,
-    donation: BigNumberish,
-    overrides?: Overrides
-  ): Promise<ContractTransaction>;
-
-  "makeOffer(uint256,uint256,uint256,uint8[],uint8,uint8)"(
-    id: BigNumberish,
-    price: BigNumberish,
-    reserve: BigNumberish,
-    bulkDiscounts: BigNumberish[],
-    affiliateInterest: BigNumberish,
-    donation: BigNumberish,
-    overrides?: Overrides
-  ): Promise<ContractTransaction>;
-
   mint(
     id: BigNumberish,
-    amount: BigNumberish,
-    uri_: string,
-    privateUri_: string,
-    canMintMore: boolean,
+    _uri: string,
+    _privateUri: string,
+    _price: BigNumberish,
+    _affiliateInterest: BigNumberish,
+    _donation: BigNumberish,
     overrides?: Overrides
   ): Promise<ContractTransaction>;
 
-  "mint(uint256,uint256,string,string,bool)"(
+  "mint(uint256,string,string,uint256,uint8,uint8)"(
     id: BigNumberish,
-    amount: BigNumberish,
-    uri_: string,
-    privateUri_: string,
-    canMintMore: boolean,
-    overrides?: Overrides
-  ): Promise<ContractTransaction>;
-
-  mintMore(
-    id: BigNumberish,
-    amount: BigNumberish,
-    overrides?: Overrides
-  ): Promise<ContractTransaction>;
-
-  "mintMore(uint256,uint256)"(
-    id: BigNumberish,
-    amount: BigNumberish,
+    _uri: string,
+    _privateUri: string,
+    _price: BigNumberish,
+    _affiliateInterest: BigNumberish,
+    _donation: BigNumberish,
     overrides?: Overrides
   ): Promise<ContractTransaction>;
 
@@ -946,16 +805,6 @@ export class Soveren extends Contract {
     id: BigNumberish,
     overrides?: CallOverrides
   ): Promise<string>;
-
-  removeOffer(
-    id: BigNumberish,
-    overrides?: Overrides
-  ): Promise<ContractTransaction>;
-
-  "removeOffer(uint256)"(
-    id: BigNumberish,
-    overrides?: Overrides
-  ): Promise<ContractTransaction>;
 
   safeBatchTransferFrom(
     from: string,
@@ -1005,6 +854,16 @@ export class Soveren extends Contract {
     overrides?: Overrides
   ): Promise<ContractTransaction>;
 
+  setProfileUri(
+    uri_: string,
+    overrides?: Overrides
+  ): Promise<ContractTransaction>;
+
+  "setProfileUri(string)"(
+    uri_: string,
+    overrides?: Overrides
+  ): Promise<ContractTransaction>;
+
   supportsInterface(
     interfaceId: BytesLike,
     overrides?: CallOverrides
@@ -1015,17 +874,23 @@ export class Soveren extends Contract {
     overrides?: CallOverrides
   ): Promise<boolean>;
 
-  transfer(
-    to: string,
+  updateProduct(
     id: BigNumberish,
-    amount: BigNumberish,
+    _uri: string,
+    _privateUri: string,
+    _price: BigNumberish,
+    _affiliateInterest: BigNumberish,
+    _donation: BigNumberish,
     overrides?: Overrides
   ): Promise<ContractTransaction>;
 
-  "transfer(address,uint256,uint256)"(
-    to: string,
+  "updateProduct(uint256,string,string,uint256,uint8,uint8)"(
     id: BigNumberish,
-    amount: BigNumberish,
+    _uri: string,
+    _privateUri: string,
+    _price: BigNumberish,
+    _affiliateInterest: BigNumberish,
+    _donation: BigNumberish,
     overrides?: Overrides
   ): Promise<ContractTransaction>;
 
@@ -1082,44 +947,16 @@ export class Soveren extends Contract {
       overrides?: CallOverrides
     ): Promise<BigNumber[]>;
 
-    batchTransfer(
-      to: string,
-      ids: BigNumberish[],
-      amounts: BigNumberish[],
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    "batchTransfer(address,uint256[],uint256[])"(
-      to: string,
-      ids: BigNumberish[],
-      amounts: BigNumberish[],
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    burn(
-      id: BigNumberish,
-      amount: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    "burn(uint256,uint256)"(
-      id: BigNumberish,
-      amount: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
     buy(
       seller: string,
       id: BigNumberish,
-      amount: BigNumberish,
       affiliate: string,
       overrides?: CallOverrides
     ): Promise<void>;
 
-    "buy(address,uint256,uint256,address)"(
+    "buy(address,uint256,address)"(
       seller: string,
       id: BigNumberish,
-      amount: BigNumberish,
       affiliate: string,
       overrides?: CallOverrides
     ): Promise<void>;
@@ -1131,65 +968,26 @@ export class Soveren extends Contract {
       overrides?: CallOverrides
     ): Promise<string>;
 
-    getOffer(
+    getProducts(
       seller: string,
-      id: BigNumberish,
       overrides?: CallOverrides
-    ): Promise<{
-      price: BigNumber;
-      reserve: BigNumber;
-      bulkDiscounts: number[];
-      affiliateInterest: number;
-      donation: number;
-      0: BigNumber;
-      1: BigNumber;
-      2: number[];
-      3: number;
-      4: number;
-    }>;
+    ): Promise<BigNumber[]>;
 
-    "getOffer(address,uint256)"(
+    "getProducts(address)"(
       seller: string,
-      id: BigNumberish,
       overrides?: CallOverrides
-    ): Promise<{
-      price: BigNumber;
-      reserve: BigNumber;
-      bulkDiscounts: number[];
-      affiliateInterest: number;
-      donation: number;
-      0: BigNumber;
-      1: BigNumber;
-      2: number[];
-      3: number;
-      4: number;
-    }>;
+    ): Promise<BigNumber[]>;
 
-    getOfferedAmount(
-      seller: string,
-      id: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
+    getProfileUri(adr: string, overrides?: CallOverrides): Promise<string>;
 
-    "getOfferedAmount(address,uint256)"(
-      seller: string,
-      id: BigNumberish,
+    "getProfileUri(address)"(
+      adr: string,
       overrides?: CallOverrides
-    ): Promise<BigNumber>;
+    ): Promise<string>;
 
-    getPriceForAmount(
-      seller: string,
-      id: BigNumberish,
-      amount: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
+    getPurchased(overrides?: CallOverrides): Promise<BigNumber[]>;
 
-    "getPriceForAmount(address,uint256,uint256)"(
-      seller: string,
-      id: BigNumberish,
-      amount: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
+    "getPurchased()"(overrides?: CallOverrides): Promise<BigNumber[]>;
 
     getRating(id: BigNumberish, overrides?: CallOverrides): Promise<number>;
 
@@ -1201,26 +999,58 @@ export class Soveren extends Contract {
     getVote(
       id: BigNumberish,
       overrides?: CallOverrides
-    ): Promise<{ rating: number; comment: string; 0: number; 1: string }>;
+    ): Promise<{
+      rating: number;
+      revision: number;
+      comment: string;
+      0: number;
+      1: number;
+      2: string;
+    }>;
 
     "getVote(uint256)"(
       id: BigNumberish,
       overrides?: CallOverrides
-    ): Promise<{ rating: number; comment: string; 0: number; 1: string }>;
+    ): Promise<{
+      rating: number;
+      revision: number;
+      comment: string;
+      0: number;
+      1: number;
+      2: string;
+    }>;
 
     getVotes(
       id: BigNumberish,
       skip: BigNumberish,
       count: BigNumberish,
       overrides?: CallOverrides
-    ): Promise<{ rating: number; comment: string; 0: number; 1: string }[]>;
+    ): Promise<
+      {
+        rating: number;
+        revision: number;
+        comment: string;
+        0: number;
+        1: number;
+        2: string;
+      }[]
+    >;
 
     "getVotes(uint256,uint32,uint32)"(
       id: BigNumberish,
       skip: BigNumberish,
       count: BigNumberish,
       overrides?: CallOverrides
-    ): Promise<{ rating: number; comment: string; 0: number; 1: string }[]>;
+    ): Promise<
+      {
+        rating: number;
+        revision: number;
+        comment: string;
+        0: number;
+        1: number;
+        2: string;
+      }[]
+    >;
 
     getVotesCount(id: BigNumberish, overrides?: CallOverrides): Promise<number>;
 
@@ -1241,53 +1071,23 @@ export class Soveren extends Contract {
       overrides?: CallOverrides
     ): Promise<boolean>;
 
-    makeOffer(
-      id: BigNumberish,
-      price: BigNumberish,
-      reserve: BigNumberish,
-      bulkDiscounts: BigNumberish[],
-      affiliateInterest: BigNumberish,
-      donation: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    "makeOffer(uint256,uint256,uint256,uint8[],uint8,uint8)"(
-      id: BigNumberish,
-      price: BigNumberish,
-      reserve: BigNumberish,
-      bulkDiscounts: BigNumberish[],
-      affiliateInterest: BigNumberish,
-      donation: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
     mint(
       id: BigNumberish,
-      amount: BigNumberish,
-      uri_: string,
-      privateUri_: string,
-      canMintMore: boolean,
+      _uri: string,
+      _privateUri: string,
+      _price: BigNumberish,
+      _affiliateInterest: BigNumberish,
+      _donation: BigNumberish,
       overrides?: CallOverrides
     ): Promise<void>;
 
-    "mint(uint256,uint256,string,string,bool)"(
+    "mint(uint256,string,string,uint256,uint8,uint8)"(
       id: BigNumberish,
-      amount: BigNumberish,
-      uri_: string,
-      privateUri_: string,
-      canMintMore: boolean,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    mintMore(
-      id: BigNumberish,
-      amount: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    "mintMore(uint256,uint256)"(
-      id: BigNumberish,
-      amount: BigNumberish,
+      _uri: string,
+      _privateUri: string,
+      _price: BigNumberish,
+      _affiliateInterest: BigNumberish,
+      _donation: BigNumberish,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -1304,13 +1104,6 @@ export class Soveren extends Contract {
       id: BigNumberish,
       overrides?: CallOverrides
     ): Promise<string>;
-
-    removeOffer(id: BigNumberish, overrides?: CallOverrides): Promise<void>;
-
-    "removeOffer(uint256)"(
-      id: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<void>;
 
     safeBatchTransferFrom(
       from: string,
@@ -1360,6 +1153,13 @@ export class Soveren extends Contract {
       overrides?: CallOverrides
     ): Promise<void>;
 
+    setProfileUri(uri_: string, overrides?: CallOverrides): Promise<void>;
+
+    "setProfileUri(string)"(
+      uri_: string,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
     supportsInterface(
       interfaceId: BytesLike,
       overrides?: CallOverrides
@@ -1370,17 +1170,23 @@ export class Soveren extends Contract {
       overrides?: CallOverrides
     ): Promise<boolean>;
 
-    transfer(
-      to: string,
+    updateProduct(
       id: BigNumberish,
-      amount: BigNumberish,
+      _uri: string,
+      _privateUri: string,
+      _price: BigNumberish,
+      _affiliateInterest: BigNumberish,
+      _donation: BigNumberish,
       overrides?: CallOverrides
     ): Promise<void>;
 
-    "transfer(address,uint256,uint256)"(
-      to: string,
+    "updateProduct(uint256,string,string,uint256,uint8,uint8)"(
       id: BigNumberish,
-      amount: BigNumberish,
+      _uri: string,
+      _privateUri: string,
+      _price: BigNumberish,
+      _affiliateInterest: BigNumberish,
+      _donation: BigNumberish,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -1420,6 +1226,25 @@ export class Soveren extends Contract {
       approved: null
     ): EventFilter;
 
+    Bought(
+      seller: null,
+      id: null,
+      price: null,
+      affiliate: null,
+      affiliateProfit: null,
+      donationProfit: null
+    ): EventFilter;
+
+    NewProduct(
+      id: null,
+      uri: null,
+      price: null,
+      affiliateInterest: null,
+      donation: null
+    ): EventFilter;
+
+    NewRevision(id: null, uri: null): EventFilter;
+
     TransferBatch(
       operator: string | null,
       from: string | null,
@@ -1437,13 +1262,6 @@ export class Soveren extends Contract {
     ): EventFilter;
 
     URI(value: null, id: BigNumberish | null): EventFilter;
-
-    buySingle(
-      seller: null,
-      id: null,
-      amount: null,
-      affiliate: null
-    ): EventFilter;
   };
 
   estimateGas: {
@@ -1471,44 +1289,16 @@ export class Soveren extends Contract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    batchTransfer(
-      to: string,
-      ids: BigNumberish[],
-      amounts: BigNumberish[],
-      overrides?: Overrides
-    ): Promise<BigNumber>;
-
-    "batchTransfer(address,uint256[],uint256[])"(
-      to: string,
-      ids: BigNumberish[],
-      amounts: BigNumberish[],
-      overrides?: Overrides
-    ): Promise<BigNumber>;
-
-    burn(
-      id: BigNumberish,
-      amount: BigNumberish,
-      overrides?: Overrides
-    ): Promise<BigNumber>;
-
-    "burn(uint256,uint256)"(
-      id: BigNumberish,
-      amount: BigNumberish,
-      overrides?: Overrides
-    ): Promise<BigNumber>;
-
     buy(
       seller: string,
       id: BigNumberish,
-      amount: BigNumberish,
       affiliate: string,
       overrides?: PayableOverrides
     ): Promise<BigNumber>;
 
-    "buy(address,uint256,uint256,address)"(
+    "buy(address,uint256,address)"(
       seller: string,
       id: BigNumberish,
-      amount: BigNumberish,
       affiliate: string,
       overrides?: PayableOverrides
     ): Promise<BigNumber>;
@@ -1520,43 +1310,23 @@ export class Soveren extends Contract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    getOffer(
+    getProducts(seller: string, overrides?: CallOverrides): Promise<BigNumber>;
+
+    "getProducts(address)"(
       seller: string,
-      id: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    "getOffer(address,uint256)"(
-      seller: string,
-      id: BigNumberish,
+    getProfileUri(adr: string, overrides?: CallOverrides): Promise<BigNumber>;
+
+    "getProfileUri(address)"(
+      adr: string,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    getOfferedAmount(
-      seller: string,
-      id: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
+    getPurchased(overrides?: CallOverrides): Promise<BigNumber>;
 
-    "getOfferedAmount(address,uint256)"(
-      seller: string,
-      id: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    getPriceForAmount(
-      seller: string,
-      id: BigNumberish,
-      amount: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    "getPriceForAmount(address,uint256,uint256)"(
-      seller: string,
-      id: BigNumberish,
-      amount: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
+    "getPurchased()"(overrides?: CallOverrides): Promise<BigNumber>;
 
     getRating(id: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -1608,53 +1378,23 @@ export class Soveren extends Contract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    makeOffer(
-      id: BigNumberish,
-      price: BigNumberish,
-      reserve: BigNumberish,
-      bulkDiscounts: BigNumberish[],
-      affiliateInterest: BigNumberish,
-      donation: BigNumberish,
-      overrides?: Overrides
-    ): Promise<BigNumber>;
-
-    "makeOffer(uint256,uint256,uint256,uint8[],uint8,uint8)"(
-      id: BigNumberish,
-      price: BigNumberish,
-      reserve: BigNumberish,
-      bulkDiscounts: BigNumberish[],
-      affiliateInterest: BigNumberish,
-      donation: BigNumberish,
-      overrides?: Overrides
-    ): Promise<BigNumber>;
-
     mint(
       id: BigNumberish,
-      amount: BigNumberish,
-      uri_: string,
-      privateUri_: string,
-      canMintMore: boolean,
+      _uri: string,
+      _privateUri: string,
+      _price: BigNumberish,
+      _affiliateInterest: BigNumberish,
+      _donation: BigNumberish,
       overrides?: Overrides
     ): Promise<BigNumber>;
 
-    "mint(uint256,uint256,string,string,bool)"(
+    "mint(uint256,string,string,uint256,uint8,uint8)"(
       id: BigNumberish,
-      amount: BigNumberish,
-      uri_: string,
-      privateUri_: string,
-      canMintMore: boolean,
-      overrides?: Overrides
-    ): Promise<BigNumber>;
-
-    mintMore(
-      id: BigNumberish,
-      amount: BigNumberish,
-      overrides?: Overrides
-    ): Promise<BigNumber>;
-
-    "mintMore(uint256,uint256)"(
-      id: BigNumberish,
-      amount: BigNumberish,
+      _uri: string,
+      _privateUri: string,
+      _price: BigNumberish,
+      _affiliateInterest: BigNumberish,
+      _donation: BigNumberish,
       overrides?: Overrides
     ): Promise<BigNumber>;
 
@@ -1670,13 +1410,6 @@ export class Soveren extends Contract {
     "privateUri(uint256)"(
       id: BigNumberish,
       overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    removeOffer(id: BigNumberish, overrides?: Overrides): Promise<BigNumber>;
-
-    "removeOffer(uint256)"(
-      id: BigNumberish,
-      overrides?: Overrides
     ): Promise<BigNumber>;
 
     safeBatchTransferFrom(
@@ -1727,6 +1460,13 @@ export class Soveren extends Contract {
       overrides?: Overrides
     ): Promise<BigNumber>;
 
+    setProfileUri(uri_: string, overrides?: Overrides): Promise<BigNumber>;
+
+    "setProfileUri(string)"(
+      uri_: string,
+      overrides?: Overrides
+    ): Promise<BigNumber>;
+
     supportsInterface(
       interfaceId: BytesLike,
       overrides?: CallOverrides
@@ -1737,17 +1477,23 @@ export class Soveren extends Contract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    transfer(
-      to: string,
+    updateProduct(
       id: BigNumberish,
-      amount: BigNumberish,
+      _uri: string,
+      _privateUri: string,
+      _price: BigNumberish,
+      _affiliateInterest: BigNumberish,
+      _donation: BigNumberish,
       overrides?: Overrides
     ): Promise<BigNumber>;
 
-    "transfer(address,uint256,uint256)"(
-      to: string,
+    "updateProduct(uint256,string,string,uint256,uint8,uint8)"(
       id: BigNumberish,
-      amount: BigNumberish,
+      _uri: string,
+      _privateUri: string,
+      _price: BigNumberish,
+      _affiliateInterest: BigNumberish,
+      _donation: BigNumberish,
       overrides?: Overrides
     ): Promise<BigNumber>;
 
@@ -1805,44 +1551,16 @@ export class Soveren extends Contract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    batchTransfer(
-      to: string,
-      ids: BigNumberish[],
-      amounts: BigNumberish[],
-      overrides?: Overrides
-    ): Promise<PopulatedTransaction>;
-
-    "batchTransfer(address,uint256[],uint256[])"(
-      to: string,
-      ids: BigNumberish[],
-      amounts: BigNumberish[],
-      overrides?: Overrides
-    ): Promise<PopulatedTransaction>;
-
-    burn(
-      id: BigNumberish,
-      amount: BigNumberish,
-      overrides?: Overrides
-    ): Promise<PopulatedTransaction>;
-
-    "burn(uint256,uint256)"(
-      id: BigNumberish,
-      amount: BigNumberish,
-      overrides?: Overrides
-    ): Promise<PopulatedTransaction>;
-
     buy(
       seller: string,
       id: BigNumberish,
-      amount: BigNumberish,
       affiliate: string,
       overrides?: PayableOverrides
     ): Promise<PopulatedTransaction>;
 
-    "buy(address,uint256,uint256,address)"(
+    "buy(address,uint256,address)"(
       seller: string,
       id: BigNumberish,
-      amount: BigNumberish,
       affiliate: string,
       overrides?: PayableOverrides
     ): Promise<PopulatedTransaction>;
@@ -1857,43 +1575,29 @@ export class Soveren extends Contract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    getOffer(
+    getProducts(
       seller: string,
-      id: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    "getOffer(address,uint256)"(
+    "getProducts(address)"(
       seller: string,
-      id: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    getOfferedAmount(
-      seller: string,
-      id: BigNumberish,
+    getProfileUri(
+      adr: string,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    "getOfferedAmount(address,uint256)"(
-      seller: string,
-      id: BigNumberish,
+    "getProfileUri(address)"(
+      adr: string,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    getPriceForAmount(
-      seller: string,
-      id: BigNumberish,
-      amount: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
+    getPurchased(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    "getPriceForAmount(address,uint256,uint256)"(
-      seller: string,
-      id: BigNumberish,
-      amount: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
+    "getPurchased()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     getRating(
       id: BigNumberish,
@@ -1951,53 +1655,23 @@ export class Soveren extends Contract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    makeOffer(
-      id: BigNumberish,
-      price: BigNumberish,
-      reserve: BigNumberish,
-      bulkDiscounts: BigNumberish[],
-      affiliateInterest: BigNumberish,
-      donation: BigNumberish,
-      overrides?: Overrides
-    ): Promise<PopulatedTransaction>;
-
-    "makeOffer(uint256,uint256,uint256,uint8[],uint8,uint8)"(
-      id: BigNumberish,
-      price: BigNumberish,
-      reserve: BigNumberish,
-      bulkDiscounts: BigNumberish[],
-      affiliateInterest: BigNumberish,
-      donation: BigNumberish,
-      overrides?: Overrides
-    ): Promise<PopulatedTransaction>;
-
     mint(
       id: BigNumberish,
-      amount: BigNumberish,
-      uri_: string,
-      privateUri_: string,
-      canMintMore: boolean,
+      _uri: string,
+      _privateUri: string,
+      _price: BigNumberish,
+      _affiliateInterest: BigNumberish,
+      _donation: BigNumberish,
       overrides?: Overrides
     ): Promise<PopulatedTransaction>;
 
-    "mint(uint256,uint256,string,string,bool)"(
+    "mint(uint256,string,string,uint256,uint8,uint8)"(
       id: BigNumberish,
-      amount: BigNumberish,
-      uri_: string,
-      privateUri_: string,
-      canMintMore: boolean,
-      overrides?: Overrides
-    ): Promise<PopulatedTransaction>;
-
-    mintMore(
-      id: BigNumberish,
-      amount: BigNumberish,
-      overrides?: Overrides
-    ): Promise<PopulatedTransaction>;
-
-    "mintMore(uint256,uint256)"(
-      id: BigNumberish,
-      amount: BigNumberish,
+      _uri: string,
+      _privateUri: string,
+      _price: BigNumberish,
+      _affiliateInterest: BigNumberish,
+      _donation: BigNumberish,
       overrides?: Overrides
     ): Promise<PopulatedTransaction>;
 
@@ -2019,16 +1693,6 @@ export class Soveren extends Contract {
     "privateUri(uint256)"(
       id: BigNumberish,
       overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    removeOffer(
-      id: BigNumberish,
-      overrides?: Overrides
-    ): Promise<PopulatedTransaction>;
-
-    "removeOffer(uint256)"(
-      id: BigNumberish,
-      overrides?: Overrides
     ): Promise<PopulatedTransaction>;
 
     safeBatchTransferFrom(
@@ -2079,6 +1743,16 @@ export class Soveren extends Contract {
       overrides?: Overrides
     ): Promise<PopulatedTransaction>;
 
+    setProfileUri(
+      uri_: string,
+      overrides?: Overrides
+    ): Promise<PopulatedTransaction>;
+
+    "setProfileUri(string)"(
+      uri_: string,
+      overrides?: Overrides
+    ): Promise<PopulatedTransaction>;
+
     supportsInterface(
       interfaceId: BytesLike,
       overrides?: CallOverrides
@@ -2089,17 +1763,23 @@ export class Soveren extends Contract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    transfer(
-      to: string,
+    updateProduct(
       id: BigNumberish,
-      amount: BigNumberish,
+      _uri: string,
+      _privateUri: string,
+      _price: BigNumberish,
+      _affiliateInterest: BigNumberish,
+      _donation: BigNumberish,
       overrides?: Overrides
     ): Promise<PopulatedTransaction>;
 
-    "transfer(address,uint256,uint256)"(
-      to: string,
+    "updateProduct(uint256,string,string,uint256,uint8,uint8)"(
       id: BigNumberish,
-      amount: BigNumberish,
+      _uri: string,
+      _privateUri: string,
+      _price: BigNumberish,
+      _affiliateInterest: BigNumberish,
+      _donation: BigNumberish,
       overrides?: Overrides
     ): Promise<PopulatedTransaction>;
 
